@@ -134,6 +134,14 @@ pub fn run() -> Result<i32> {
                 .required(true)
                 .default_value(".repomon.toml"),
         )
+        .arg(
+            Arg::with_name("address")
+                .short("a")
+                .long("address")
+                .takes_value(true)
+                .required(true)
+                .default_value("127.0.0.1:8080"),
+        )
         .arg(Arg::with_name("repo").default_value("."))
         .get_matches();
 
@@ -141,10 +149,14 @@ pub fn run() -> Result<i32> {
     let mut reader = BufReader::new(config_file);
     let branches = repomon::read_toml(&mut reader)?;
 
+    let addr = matches
+        .value_of("address")
+        .ok_or("invalid address")?
+        .parse::<SocketAddr>()?;
     let mut core = Core::new()?;
     let remote_handle = core.remote();
     let handle = core.handle();
-    let socket = TcpListener::bind(&"0.0.0.0:8080".parse::<SocketAddr>()?, &handle)?;
+    let socket = TcpListener::bind(&addr, &handle)?;
 
     // This is a single-threaded server, so we can just use Rc and RefCell to
     // store the map of all connections we know about.
