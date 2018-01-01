@@ -1,4 +1,4 @@
-// Copyright (c) 2017 repomon developers
+// Copyright (c) 2017 repomons developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -18,7 +18,7 @@ extern crate clap;
 extern crate futures;
 extern crate git2;
 extern crate rand;
-extern crate repomon_config;
+extern crate repomon;
 extern crate tokio_core;
 extern crate tokio_io;
 

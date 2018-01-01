@@ -1,4 +1,4 @@
-// Copyright (c) 2017 repomon developers
+// Copyright (c) 2017 repomons developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -12,6 +12,6 @@ error_chain!{
         AddrParse(::std::net::AddrParseError);
         Git2(::git2::Error);
         Io(::std::io::Error);
-        RepomonConfig(::repomon_config::Error);
+        Repomon(::repomon::Error);
     }
 }

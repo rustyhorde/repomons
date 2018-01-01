@@ -1,4 +1,4 @@
-// Copyright (c) 2017 repomon developers
+// Copyright (c) 2017 repomons developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -19,7 +19,7 @@ use git2::{self, BranchType, CredentialType, FetchOptions, FetchPrune, Progress,
 use git2::Cred;
 use rand;
 use rand::distributions::{IndependentSample, Range};
-use repomon_config::{self, Branch, Message};
+use repomon::{self, Branch, Message};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -139,7 +139,7 @@ pub fn run() -> Result<i32> {
 
     let config_file = File::open(matches.value_of("config").ok_or("invalid config file")?)?;
     let mut reader = BufReader::new(config_file);
-    let branches = repomon_config::read_toml(&mut reader)?;
+    let branches = repomon::read_toml(&mut reader)?;
 
     let mut core = Core::new()?;
     let remote_handle = core.remote();
