@@ -1,4 +1,4 @@
-// Copyright (c) 2017 repomons developers
+// Copyright (c) 2017 repomon developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -6,9 +6,12 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! `repomons` errors
+//! `repomon` errors
 error_chain!{
     foreign_links {
+        AddrParse(::std::net::AddrParseError);
+        Git2(::git2::Error);
         Io(::std::io::Error);
+        RepomonConfig(::repomon_config::Error);
     }
 }

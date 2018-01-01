@@ -1,4 +1,4 @@
-// Copyright (c) 2017 repomons developers
+// Copyright (c) 2017 repomon developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -6,12 +6,23 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! `repomons` 0.1.0
+//! `repomon` 0.1.0
+#![feature(try_from)]
 #![deny(missing_docs)]
-extern crate clap;
+
 #[macro_use]
 extern crate error_chain;
 
+extern crate bincode;
+extern crate clap;
+extern crate futures;
+extern crate git2;
+extern crate rand;
+extern crate repomon_config;
+extern crate tokio_core;
+extern crate tokio_io;
+
+mod branch;
 mod error;
 mod run;
 

@@ -1,0 +1,11 @@
+[[branch.repomon]]
+name = "origin/master"
+interval = "1m"
+
+[[branch.repomon]]
+name = "origin/feature/testing"
+interval = "1m"
+
+[[branch.repomon-config]]
+name = "origin/master"
+interval = "1m"
