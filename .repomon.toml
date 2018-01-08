@@ -1,11 +1,36 @@
-[[branch.repomon]]
-name = "origin/master"
-interval = "1m"
+basedir = "/home/jozias/projects/rust-lang"
 
-[[branch.repomon]]
-name = "origin/feature/testing"
-interval = "1m"
+[[repos.ar2.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/ar2.git"
 
-[[branch.repomon-config]]
-name = "origin/master"
+[[repos.ar2.branch]]
+name = "master"
 interval = "1m"
+remotes = ["origin"]
+
+[[repos.repomon.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/repomon.git"
+
+[[repos.repomon.remotes]]
+name = "gh"
+url = "git@github.com:rustyhorde/repomon.git"
+
+[[repos.repomon.remotes]]
+name = "bb"
+url = "git@bitbucket.org:rustyhorde/repomon.git"
+
+[[repos.repomon.remotes]]
+name = "gl"
+url = "git@gitlab.com:rustyhorde/repomon.git"
+
+[[repos.repomon.branch]]
+name = "master"
+interval = "30s"
+remotes = ["origin", "gh", "bb"]
+
+[[repos.repomon.branch]]
+name = "feature/testing"
+interval = "30s"
+remotes = ["origin"]

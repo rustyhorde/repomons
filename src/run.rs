@@ -7,118 +7,25 @@
 // modified, or distributed except according to those terms.
 
 //! `repomon` runtime
-use bincode::{serialize, Infinite};
-use branch;
+use branch::{self, MonitorConfig};
 use clap::{App, Arg};
 use error::Result;
-use futures::future::result;
+use futures::{Future, Stream};
 use futures::sync::mpsc;
-use futures::{Future, Sink, Stream};
-use git2::{self, BranchType, CredentialType, FetchOptions, FetchPrune, Progress, RemoteCallbacks,
-           Repository, Status, StatusOptions};
-use git2::Cred;
-use rand;
-use rand::distributions::{IndependentSample, Range};
-use repomon::{self, Branch, Message};
+use log::Logs;
+use repomon;
+use slog::Level;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::time::Duration;
 use std::fs::File;
-use std::io::{self, BufReader, Write};
+use std::io::BufReader;
 use std::net::SocketAddr;
 use std::rc::Rc;
 use std::thread;
 use tokio_core::net::TcpListener;
-use tokio_core::reactor::{Core, Remote};
+use tokio_core::reactor::Core;
 use tokio_io::AsyncRead;
 use tokio_io::io::write_all;
-
-/// Check credentials for connecting to remote.
-fn check_creds(
-    _url: &str,
-    username: Option<&str>,
-    cred_type: CredentialType,
-) -> ::std::result::Result<Cred, git2::Error> {
-    if cred_type.contains(git2::SSH_KEY) {
-        Cred::ssh_key_from_agent(username.unwrap_or(""))
-    } else {
-        Err(git2::Error::from_str("Unable to authenticate"))
-    }
-}
-
-/// Progress remote callback.
-#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-fn progress(progress: Progress) -> bool {
-    writeln!(io::stdout(), "{}", progress.received_objects()).unwrap_or(());
-    true
-}
-
-/// Side band remote callback.
-fn side_band(text: &[u8]) -> bool {
-    writeln!(io::stdout(), "{}", String::from_utf8_lossy(text)).unwrap_or(());
-    true
-}
-
-/// Convert a status to a composite string.
-fn status_out(status: &Status, out: &mut String) -> Result<()> {
-    let mut statuses = Vec::new();
-
-    if status.contains(git2::STATUS_INDEX_NEW) {
-        statuses.push("idx-new");
-    }
-
-    if status.contains(git2::STATUS_INDEX_MODIFIED) {
-        statuses.push("idx-modified");
-    }
-
-    if status.contains(git2::STATUS_INDEX_DELETED) {
-        statuses.push("idx-deleted");
-    }
-
-    if status.contains(git2::STATUS_INDEX_TYPECHANGE) {
-        statuses.push("idx-typechange");
-    }
-
-    if status.contains(git2::STATUS_INDEX_RENAMED) {
-        statuses.push("idx-renamed");
-    }
-
-    if status.contains(git2::STATUS_WT_NEW) {
-        statuses.push("wt-new");
-    }
-
-    if status.contains(git2::STATUS_WT_MODIFIED) {
-        statuses.push("wt-modified");
-    }
-
-    if status.contains(git2::STATUS_WT_DELETED) {
-        statuses.push("wt-deleted");
-    }
-
-    if status.contains(git2::STATUS_WT_TYPECHANGE) {
-        statuses.push("wt-typechange");
-    }
-
-    if status.contains(git2::STATUS_WT_RENAMED) {
-        statuses.push("wt-renamed");
-    }
-
-    // if status.contains(git2::STATUS_WT_UNREADABLE) {
-    //     statuses.push("wt-unreadable");
-    // }
-
-    if status.contains(git2::STATUS_IGNORED) {
-        statuses.push("ignored");
-    }
-
-    if status.contains(git2::STATUS_CONFLICTED) {
-        statuses.push("conflicted");
-    }
-
-    out.push_str(&statuses.join(", "));
-    Ok(())
-}
 
 /// CLI Runtime
 pub fn run() -> Result<i32> {
@@ -142,12 +49,53 @@ pub fn run() -> Result<i32> {
                 .required(true)
                 .default_value("127.0.0.1:8080"),
         )
+        .arg(
+            Arg::with_name("verbose")
+                .short("v")
+                .multiple(true)
+                .help("Set the output verbosity level (more v's = more verbose)"),
+        )
+        .arg(
+            Arg::with_name("quiet")
+                .short("q")
+                .long("quiet")
+                .multiple(true)
+                .conflicts_with("verbose")
+                .help("Restrict output.  (more q's = more quiet"),
+        )
         .arg(Arg::with_name("repo").default_value("."))
         .get_matches();
 
+    // Setup the logging (info by default)
+    let mut level = match matches.occurrences_of("verbose") {
+        0 => Level::Info,
+        1 => Level::Debug,
+        2 | _ => Level::Trace,
+    };
+
+    level = match matches.occurrences_of("quiet") {
+        0 => level,
+        1 => Level::Warning,
+        2 => Level::Error,
+        3 | _ => Level::Critical,
+    };
+
+    let mut logs: Logs = Default::default();
+    logs.set_stdout_level(level);
+
+    // Logging clones for server, monitor threads, receiver, and config.
+    let server_logs = logs.clone();
+    let thread_logs = logs.clone();
+    let receiver_logs = logs.clone();
+    let config_logs = logs.clone();
+
+    try_trace!(logs.stdout(), "Logging configured!");
+
     let config_file = File::open(matches.value_of("config").ok_or("invalid config file")?)?;
     let mut reader = BufReader::new(config_file);
-    let branches = repomon::read_toml(&mut reader)?;
+    let repomon = repomon::read_toml(&mut reader)?;
+
+    try_trace!(logs.stdout(), "Configuration TOML parsed!");
 
     let addr = matches
         .value_of("address")
@@ -157,6 +105,7 @@ pub fn run() -> Result<i32> {
     let remote_handle = core.remote();
     let handle = core.handle();
     let socket = TcpListener::bind(&addr, &handle)?;
+    try_trace!(logs.stdout(), "Listening for connections"; "addr" => format!("{}", addr));
 
     // This is a single-threaded server, so we can just use Rc and RefCell to
     // store the map of all connections we know about.
@@ -167,6 +116,8 @@ pub fn run() -> Result<i32> {
     let srv_cons = Rc::clone(&connections);
 
     let srv = socket.incoming().for_each(move |(stream, addr)| {
+        try_info!(server_logs.stdout(), "Connection opened"; "addr" => format!("{}", addr));
+        // We currently don't accept input from the clients, so only grabbing the writer.
         let (_r, writer) = stream.split();
 
         // Create a channel for our stream, which other sockets will use to
@@ -177,8 +128,9 @@ pub fn run() -> Result<i32> {
 
         // Whenever we receive a string on the Receiver, we write it to
         // `WriteHalf<TcpStream>`.
+        let writer_logs = logs.clone();
         let socket_writer = rx.fold(writer, move |writer, msg: Vec<u8>| {
-            writeln!(io::stdout(), "Sending bincoded monitor to {}", &addr).expect("");
+            try_trace!(writer_logs.stdout(), "Sending bincoded monitor"; "addr" => format!("{}", addr));
             let writer_buf_tuple = write_all(writer, msg);
             let writer = writer_buf_tuple.map(|(writer, _)| writer);
             writer.map_err(|_| ())
@@ -188,8 +140,9 @@ pub fn run() -> Result<i32> {
         let socket_writer = socket_writer.map(|_| ());
 
         let connections = Rc::clone(&srv_cons);
+        let spawn_logs = server_logs.clone();
         handle.spawn(socket_writer.then(move |_| {
-            writeln!(io::stdout(), "Closing connection: {}", &addr).expect("");
+            try_info!(spawn_logs.stdout(), "Closing connection"; "addr" => format!("{}", addr));
             connections.borrow_mut().remove(&addr);
             Ok(())
         }));
@@ -197,139 +150,62 @@ pub fn run() -> Result<i32> {
         Ok(())
     });
 
-    let (tx, rx) = mpsc::channel(1);
+    let srv = srv.map_err(|_| ());
 
-    for (repo, branches) in branches.branch_map() {
-        let t_tx = tx.clone();
-        let t_repo = repo.clone();
-        let t_branches = branches.clone();
-        let t_remote = remote_handle.clone();
-        thread::spawn(move || monitor_repo(&t_repo, &t_branches, &t_tx, &t_remote));
+    // The tx gets cloned into monitor threads for sending messages.
+    // The rx send received messages to connected clients.
+    let (tx, rx) = mpsc::unbounded();
+    let basedir = repomon.basedir();
+
+    let mut monitor_config = MonitorConfig::new(basedir, tx, config_logs, remote_handle);
+
+    // Startup the monitor threads (one per repository/branch combination).
+    for (repo_name, repo) in repomon.repos() {
+        for branch in repo.branch() {
+            // All the clones.  Moving into monitor thread.
+            let t_logs = thread_logs.clone();
+            let t_repo_name = repo_name.clone();
+            let t_branch_name = branch.name().clone();
+            monitor_config.set_repo_name(repo_name.clone());
+            monitor_config.set_branch(branch.clone());
+            monitor_config.set_remotes(repo.remotes().clone());
+
+            let t_monitor_config = monitor_config.clone();
+
+            thread::spawn(move || {
+                if let Err(e) = branch::monitor_branch(t_monitor_config) {
+                    try_error!(
+                        t_logs.stderr(),
+                        "Error starting monitor: {}", e;
+                        "repository" => t_repo_name,
+                        "branch" => t_branch_name
+                    );
+                }
+            });
+        }
     }
 
-    let rx_fut = rx.for_each(|res| {
-        match res {
-            Ok(repo) => {
-                writeln!(io::stdout(), "Success: Sending bincoded Monitor").expect("");
+    // This is where we send messages from the monitors off to any connected clients.
+    let rx_fut = rx.for_each(|message_result| {
+        match message_result {
+            Ok(message) => {
                 let mut conns = rx_cons.borrow_mut();
                 for tx in conns.iter_mut().map(|(_, v)| v) {
-                    if tx.unbounded_send(repo.clone()).is_err() {
-                        writeln!(io::stdout(), "Error sending message").expect("");
+                    if tx.unbounded_send(message.clone()).is_err() {
+                        try_error!(receiver_logs.stderr(), "Error sending message");
                     }
                 }
             }
-            Err(_) => writeln!(io::stdout(), "Error").expect(""),
+            Err(()) => try_error!(receiver_logs.stderr(), "Error"),
         }
         Ok(())
     });
 
-    let srv = srv.map_err(|_| ());
+    // Join the server and monitor futures.
     let both = rx_fut.join(srv);
 
-    core.run(both).expect("failed to run event loop");
+    // Run the monitors and the server.
+    core.run(both).expect("Failed to run event loop");
 
-    let repo = Repository::discover(matches.value_of("repo").ok_or("")?)?;
-    let mut status_opts = StatusOptions::new();
-    status_opts.include_ignored(false);
-    status_opts.include_untracked(true);
-
-    let statuses = repo.statuses(Some(&mut status_opts))?;
-
-    let mut rcb = RemoteCallbacks::new();
-    rcb.transfer_progress(progress);
-    rcb.sideband_progress(side_band);
-    rcb.credentials(check_creds);
-
-    let mut fetch_opts = FetchOptions::new();
-    fetch_opts.remote_callbacks(rcb);
-    fetch_opts.prune(FetchPrune::On);
-
-    let master_oid = branch::get_oid_by_branch_name(&repo, "master", Some(BranchType::Local))?;
-    let origin_master_oid =
-        branch::get_oid_by_branch_name(&repo, "origin/master", Some(BranchType::Remote))?;
-    let (ahead, behind) = repo.graph_ahead_behind(master_oid, origin_master_oid)?;
-
-    if ahead > 0 {
-        writeln!(
-            io::stdout(),
-            "Your branch is ahead of '{}' by {} commit(s)",
-            "origin/master",
-            ahead
-        )?;
-    } else if behind > 0 {
-        writeln!(
-            io::stdout(),
-            "Your branch is behind '{}' by {} commit(s)",
-            "origin/master",
-            behind
-        )?;
-    } else {
-        writeln!(
-            io::stdout(),
-            "Your branch is up to date with '{}'",
-            "origin/master"
-        )?;
-    }
-
-    for (branch, _) in repo.branches(None)?
-        .filter_map(|branch_res| branch_res.ok())
-    {
-        writeln!(io::stdout(), "Branch: {}", branch.name()?.ok_or("No name")?)?;
-        writeln!(io::stdout(), "Branch is head: {}", branch.is_head())?;
-        writeln!(
-            io::stdout(),
-            "Branch OID: {}",
-            branch.get().target().ok_or("No OID")?
-        )?;
-    }
-    for status in statuses.iter() {
-        let mut status_str = String::new();
-        status_out(&status.status(), &mut status_str)?;
-        writeln!(
-            io::stdout(),
-            "Path: {}, {}",
-            status.path().unwrap_or("''"),
-            status_str
-        )?;
-    }
-
-    for remote in repo.remotes()?.iter().filter_map(|remote_opt| remote_opt) {
-        repo.find_remote(remote)?
-            .fetch(&["master"], Some(&mut fetch_opts), None)?;
-    }
     Ok(0)
-}
-
-/// Monitor the repository branches.
-fn monitor_repo(
-    repo: &str,
-    branches: &[Branch],
-    tx: &mpsc::Sender<::std::result::Result<Vec<u8>, ()>>,
-    remote: &Remote,
-) {
-    let mut rng = rand::thread_rng();
-    let between = Range::new(1000, 5000);
-    let mut message: Message = Default::default();
-    message.set_repo(repo.to_string());
-    message.set_branch(branches[0].clone());
-    message.set_count(0);
-
-    loop {
-        let tx = tx.clone();
-        let mut msg_clone = message.clone();
-        let n: u64 = between.ind_sample(&mut rng);
-        msg_clone.set_count(TryFrom::try_from(n).expect("cannot convert to u32"));
-        thread::sleep(Duration::from_millis(n));
-        let f = result::<(), ()>(Ok(()));
-
-        remote.spawn(|_| {
-            f.then(move |_res| {
-                let encoded = serialize(&msg_clone, Infinite).expect("");
-                tx.send(Ok(encoded)).then(|tx| match tx {
-                    Ok(_tx) => Ok(()),
-                    Err(_e) => Err(()),
-                })
-            })
-        });
-    }
 }

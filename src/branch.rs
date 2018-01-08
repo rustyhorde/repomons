@@ -7,16 +7,228 @@
 // modified, or distributed except according to those terms.
 
 //! branch related operations
+use bincode::{serialize, Infinite};
+use callbacks;
 use error::Result;
-use git2::{BranchType, Oid, Repository};
+use futures::future::result;
+use futures::sync::mpsc;
+use futures::{Future, Sink};
+use git2::{self, BranchType, FetchOptions, FetchPrune, Oid, Repository, Status};
+use log::Logs;
+use rand;
+use rand::distributions::{IndependentSample, Range};
+use repomon::{Branch, Message, Remote};
+use repo::{self, RepoConfig};
+use std::collections::HashMap;
+use std::convert::TryFrom;
+use std::path::PathBuf;
+use std::thread;
+use std::time::{Duration, Instant};
+use uuid::Uuid;
+
+type SenderType = mpsc::UnboundedSender<::std::result::Result<Vec<u8>, ()>>;
+
+#[derive(Clone, Getters, Setters)]
+pub struct MonitorConfig {
+    #[get] basedir: String,
+    #[get] tx: SenderType,
+    #[get] logs: Logs,
+    #[get] remote_handle: ::tokio_core::reactor::Remote,
+    #[get]
+    #[set = "pub"]
+    repo_name: String,
+    #[get]
+    #[set = "pub"]
+    branch: Branch,
+    #[get]
+    #[set = "pub"]
+    remotes: Vec<Remote>,
+}
+
+impl MonitorConfig {
+    pub fn new(
+        basedir: &String,
+        tx: SenderType,
+        logs: Logs,
+        remote_handle: ::tokio_core::reactor::Remote,
+    ) -> MonitorConfig {
+        MonitorConfig {
+            basedir: basedir.clone(),
+            tx: tx,
+            logs: logs,
+            remote_handle: remote_handle,
+            repo_name: Default::default(),
+            branch: Default::default(),
+            remotes: Default::default(),
+        }
+    }
+}
+
+/// Monitor
+pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
+    try_info!(
+        config.logs().stdout(),
+        "Starting monitor thread";
+        "repository" => config.repo_name(),
+        "branch" => format!("{}", config.branch())
+    );
+
+    // Grab so info out of the branch config
+    let interval = config.branch().interval_to_ms()?;
+    let branch_name = config.branch().name();
+    let repo_name = config.repo_name();
+
+    // Setup the base message.
+    let mut message: Message = Default::default();
+    message.set_repo(repo_name.clone());
+    message.set_branch(config.branch().clone());
+    message.set_count(0);
+
+    // Delay start up to 20% to avoid running all the same intervals
+    // at the same time.
+    let mut rng = rand::thread_rng();
+    let between = Range::new(0, interval / 5);
+    let rand_delay: u64 = TryFrom::try_from(between.ind_sample(&mut rng))?;
+    try_trace!(config.logs().stdout(), "Delaying monitor start"; "ms" => rand_delay, "repository" => repo_name, "branch" => branch_name);
+    thread::sleep(Duration::from_millis(rand_delay));
+
+    // Setup some config, used to discover/clone the repository
+    let mut repo_config: RepoConfig = Default::default();
+    repo_config.set_basedir(PathBuf::from(config.basedir()));
+    repo_config.set_repo(PathBuf::from(repo_name));
+    repo_config.set_remotes(config.remotes());
+
+    let repo = repo::discover_or_clone(&repo_config)?;
+
+    let mut fetch_opts = FetchOptions::new();
+    fetch_opts.remote_callbacks(callbacks::get_default());
+    fetch_opts.prune(FetchPrune::On);
+
+    loop {
+        // Add some loop specific information to the message.
+        let mut msg_clone = message.clone();
+        msg_clone.set_count(interval);
+        msg_clone.set_uuid(Uuid::new_v4());
+
+        // Metrics
+        let now = Instant::now();
+
+        // Run a fetch on the remotes we are monitoring.
+        for remote in config.branch().remotes() {
+            repo.find_remote(remote)?
+                .fetch(&[branch_name], Some(&mut fetch_opts), None)?;
+        }
+
+        let local_branch_oid = get_oid_by_branch_name(&repo, branch_name, Some(BranchType::Local))?;
+        let remote_oids = config
+            .branch()
+            .remotes()
+            .iter()
+            .map(|x| {
+                let mut remote_name = x.clone();
+                remote_name.push('/');
+                remote_name.push_str(branch_name);
+                remote_name
+            })
+            .map(|remote_name| {
+                try_debug!(config.logs().stdout(), "Looking up OID"; "remote" => &remote_name);
+                (
+                    remote_name.clone(),
+                    get_oid_by_branch_name(&repo, &remote_name, Some(BranchType::Remote))
+                        .expect(""),
+                )
+            })
+            .collect::<HashMap<String, Vec<Oid>>>();
+
+        for (remote_name, remote_oids) in &remote_oids {
+            for remote_oid in remote_oids {
+                try_debug!(
+                    config.logs().stdout(),
+                    "Remote OID";
+                    "remote_name" => remote_name,
+                    "oid" => format!("{}", remote_oid),
+                    "repository" => repo_name,
+                    "branch" => branch_name
+                );
+            }
+        }
+
+        for (local_oid, (remote_name, remote_oids)) in
+            local_branch_oid.iter().cycle().zip(remote_oids.iter())
+        {
+            for remote_oid in remote_oids {
+                let (ahead, behind) = repo.graph_ahead_behind(*local_oid, *remote_oid)?;
+
+                if ahead > 0 || behind > 0 {
+                    if ahead > 0 {
+                        try_info!(
+                            config.logs().stdout(),
+                            "Your branch is ahead of '{}' by {} commit(s)",
+                            remote_name,
+                            ahead;
+                            "repository" => repo_name,
+                            "branch" => branch_name
+                        );
+                    }
+
+                    if behind > 0 {
+                        try_info!(
+                            config.logs().stdout(),
+                            "Your branch is behind '{}' by {} commit(s)",
+                            remote_name,
+                            behind;
+                            "repository" => repo_name,
+                            "branch" => branch_name
+                        );
+                    }
+                } else {
+                    try_info!(
+                        config.logs().stdout(),
+                        "Your branch is up to date with '{}'",
+                        remote_name;
+                        "repository" => repo_name,
+                        "branch" => branch_name
+                    );
+                }
+            }
+        }
+
+        let f = result::<(), ()>(Ok(()));
+        let tx = config.tx().clone();
+
+        config.remote_handle().spawn(|_| {
+            f.then(move |_res| {
+                let encoded = serialize(&msg_clone, Infinite).expect("");
+                tx.send(Ok(encoded)).then(|tx| match tx {
+                    Ok(_tx) => Ok(()),
+                    Err(_e) => Err(()),
+                })
+            })
+        });
+
+        try_trace!(
+            config.logs().stdout(),
+            "Duration: {}.{}",
+            now.elapsed().as_secs(),
+            now.elapsed().subsec_millis();
+            "repository" => repo_name,
+            "branch" => branch_name
+        );
+
+        // Sleep until the interval has passed.
+        let int: u64 = TryFrom::try_from(interval)?;
+        try_trace!(config.logs().stdout(), "Sleeping"; "interval" => int, "repository" => repo_name, "branch" => branch_name);
+        thread::sleep(Duration::from_millis(int));
+    }
+}
 
 /// Get an OID for a branch given a name.
 pub fn get_oid_by_branch_name(
     repo: &Repository,
     branch_name: &str,
     branch_type: Option<BranchType>,
-) -> Result<Oid> {
-    let oids = repo.branches(branch_type)?
+) -> Result<Vec<Oid>> {
+    Ok(repo.branches(branch_type)?
         .filter_map(|branch_res| branch_res.ok())
         .filter_map(|(branch, _)| {
             if let Ok(Some(bn)) = branch.name() {
@@ -29,11 +241,66 @@ pub fn get_oid_by_branch_name(
                 None
             }
         })
-        .collect::<Vec<Oid>>();
+        .collect::<Vec<Oid>>())
+}
 
-    if oids.len() == 1 {
-        Ok(oids[0])
-    } else {
-        Err("Multiple OIDs found".into())
+/// Convert a status to a composite string.
+#[allow(dead_code)]
+fn status_out(status: &Status, out: &mut String) -> Result<()> {
+    let mut statuses = Vec::new();
+
+    if status.contains(git2::STATUS_INDEX_NEW) {
+        statuses.push("idx-new");
     }
+
+    if status.contains(git2::STATUS_INDEX_MODIFIED) {
+        statuses.push("idx-modified");
+    }
+
+    if status.contains(git2::STATUS_INDEX_DELETED) {
+        statuses.push("idx-deleted");
+    }
+
+    if status.contains(git2::STATUS_INDEX_TYPECHANGE) {
+        statuses.push("idx-typechange");
+    }
+
+    if status.contains(git2::STATUS_INDEX_RENAMED) {
+        statuses.push("idx-renamed");
+    }
+
+    if status.contains(git2::STATUS_WT_NEW) {
+        statuses.push("wt-new");
+    }
+
+    if status.contains(git2::STATUS_WT_MODIFIED) {
+        statuses.push("wt-modified");
+    }
+
+    if status.contains(git2::STATUS_WT_DELETED) {
+        statuses.push("wt-deleted");
+    }
+
+    if status.contains(git2::STATUS_WT_TYPECHANGE) {
+        statuses.push("wt-typechange");
+    }
+
+    if status.contains(git2::STATUS_WT_RENAMED) {
+        statuses.push("wt-renamed");
+    }
+
+    // if status.contains(git2::STATUS_WT_UNREADABLE) {
+    //     statuses.push("wt-unreadable");
+    // }
+
+    if status.contains(git2::STATUS_IGNORED) {
+        statuses.push("ignored");
+    }
+
+    if status.contains(git2::STATUS_CONFLICTED) {
+        statuses.push("conflicted");
+    }
+
+    out.push_str(&statuses.join(", "));
+    Ok(())
 }
