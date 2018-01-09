@@ -173,7 +173,7 @@ pub fn run() -> Result<i32> {
             let t_monitor_config = monitor_config.clone();
 
             thread::spawn(move || {
-                if let Err(e) = branch::monitor_branch(t_monitor_config) {
+                if let Err(e) = branch::monitor(&t_monitor_config) {
                     try_error!(
                         t_logs.stderr(),
                         "Error starting monitor: {}", e;

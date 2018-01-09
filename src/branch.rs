@@ -18,7 +18,7 @@ use log::Logs;
 use rand;
 use rand::distributions::{IndependentSample, Range};
 use repomon::{Branch, Message, Remote};
-use repo::{self, RepoConfig};
+use repo::{self, Config};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::path::PathBuf;
@@ -26,34 +26,48 @@ use std::thread;
 use std::time::{Duration, Instant};
 use uuid::Uuid;
 
+/// Sender type for monitor.
 type SenderType = mpsc::UnboundedSender<::std::result::Result<Vec<u8>, ()>>;
 
+/// Repository monitor configuration.
 #[derive(Clone, Getters, Setters)]
 pub struct MonitorConfig {
-    #[get] basedir: String,
-    #[get] tx: SenderType,
-    #[get] logs: Logs,
-    #[get] remote_handle: ::tokio_core::reactor::Remote,
+    /// The base directory to start repository discovery.
+    #[get]
+    basedir: String,
+    /// The mpsc sender type.
+    #[get]
+    tx: SenderType,
+    /// The slog logs.
+    #[get]
+    logs: Logs,
+    /// The remote handle to the event loop.
+    #[get]
+    remote_handle: ::tokio_core::reactor::Remote,
     #[get]
     #[set = "pub"]
+    /// The repository name.
     repo_name: String,
     #[get]
     #[set = "pub"]
+    /// The branch we are monitoring.
     branch: Branch,
     #[get]
     #[set = "pub"]
+    /// The remotes we are comparing this branch against.
     remotes: Vec<Remote>,
 }
 
 impl MonitorConfig {
+    /// Create a new configuration for this monitor.
     pub fn new(
-        basedir: &String,
+        basedir: &str,
         tx: SenderType,
         logs: Logs,
         remote_handle: ::tokio_core::reactor::Remote,
-    ) -> MonitorConfig {
-        MonitorConfig {
-            basedir: basedir.clone(),
+    ) -> Self {
+        Self {
+            basedir: basedir.to_string(),
             tx: tx,
             logs: logs,
             remote_handle: remote_handle,
@@ -65,7 +79,7 @@ impl MonitorConfig {
 }
 
 /// Monitor
-pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
+pub fn monitor(config: &MonitorConfig) -> Result<()> {
     try_info!(
         config.logs().stdout(),
         "Starting monitor thread";
@@ -93,7 +107,7 @@ pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
     thread::sleep(Duration::from_millis(rand_delay));
 
     // Setup some config, used to discover/clone the repository
-    let mut repo_config: RepoConfig = Default::default();
+    let mut repo_config: Config = Default::default();
     repo_config.set_basedir(PathBuf::from(config.basedir()));
     repo_config.set_repo(PathBuf::from(repo_name));
     repo_config.set_remotes(config.remotes());

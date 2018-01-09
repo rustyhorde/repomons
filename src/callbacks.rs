@@ -63,7 +63,7 @@ fn bytes_to_string(bytes_pre: usize) -> Result<String> {
     let mut rem_pre = 0;
     let mut unit_idx = 0;
     while curr_bytes >= 1024 {
-        curr_bytes = curr_bytes / 1024;
+        curr_bytes /= 1024;
         rem_pre = curr_bytes % 1024;
         unit_idx += 1;
         // ~1024^6 bytes is currently the max that can fit in a usize, so break here.
@@ -138,6 +138,7 @@ pub fn progress(output: &mut CloneOutput, progress: Progress) -> bool {
     true
 }
 
+/// Setup the default set of callbacks.
 pub fn get_default<'a>() -> RemoteCallbacks<'a> {
     let mut rcb = RemoteCallbacks::new();
     // rcb.transfer_progress(progress);

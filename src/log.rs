@@ -1,16 +1,30 @@
+// Copyright (c) 2017 repomons developers
+//
+// Licensed under the Apache License, Version 2.0
+// <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
+// license <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. All files in the project carrying such notice may not be copied,
+// modified, or distributed except according to those terms.
+
+//! `repomon` slog logs.
 use slog::{Drain, Level, LevelFilter, Logger};
 use slog_async::Async;
 use slog_term::{CompactFormat, TermDecorator};
 
+/// slog `Logger`s for stdout and stderr.
 #[derive(Clone, Debug, Getters)]
 pub struct Logs {
-    #[get = "pub"] stdout: Option<Logger>,
-    #[get = "pub"] stderr: Option<Logger>,
+    /// stdout logger.
+    #[get = "pub"]
+    stdout: Option<Logger>,
+    /// stderr logger.
+    #[get = "pub"]
+    stderr: Option<Logger>,
 }
 
 impl Default for Logs {
-    fn default() -> Logs {
-        Logs {
+    fn default() -> Self {
+        Self {
             stdout: None,
             stderr: Some(stderr_logger()),
         }
@@ -19,7 +33,7 @@ impl Default for Logs {
 
 impl Logs {
     /// Set the stdout filter level.
-    pub fn set_stdout_level(&mut self, level: Level) -> &mut Logs {
+    pub fn set_stdout_level(&mut self, level: Level) -> &mut Self {
         self.stdout = Some(stdout_logger(level));
         self
     }

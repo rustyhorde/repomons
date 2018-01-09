@@ -18,39 +18,51 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use term;
 
+/// Repository config.
 #[derive(Clone, Debug, Default, Getters, Setters)]
-pub struct RepoConfig<'a> {
+pub struct Config<'a> {
+    /// The base directory to start repository discovery/clone at.
     #[get = "pub"]
     #[set = "pub"]
     basedir: PathBuf,
+    /// The repository name.
     #[get = "pub"]
     #[set = "pub"]
     repo: PathBuf,
+    /// The set of remotes to fetch.
     #[get = "pub"]
     #[set = "pub"]
     remotes: &'a [Remote],
 }
 
+/// The clone state.
 #[derive(PartialEq)]
 pub enum CloneState {
+    /// Receiving objects.
     Receiving,
+    /// Resolving deltas.
     Resolving,
 }
 
+/// Clone output shared state.
 #[derive(Getters, MutGetters, Setters)]
 pub struct CloneOutput {
-    #[get_mut = "pub"] sideband: String,
+    /// The sideband callback output.
+    #[get_mut = "pub"]
+    sideband: String,
+    /// The progress callback output.
     #[set = "pub"]
     #[get_mut = "pub"]
     progress: String,
+    /// The current state.
     #[get = "pub"]
     #[set = "pub"]
     state: CloneState,
 }
 
 impl Default for CloneOutput {
-    fn default() -> CloneOutput {
-        CloneOutput {
+    fn default() -> Self {
+        Self {
             sideband: String::new(),
             progress: String::new(),
             state: CloneState::Receiving,
@@ -59,7 +71,7 @@ impl Default for CloneOutput {
 }
 
 /// Discover the given repository at the given base directory, to try to clone it there.
-pub fn discover_or_clone(config: &RepoConfig) -> Result<Repository> {
+pub fn discover_or_clone(config: &Config) -> Result<Repository> {
     env::set_current_dir(config.basedir())?;
     match Repository::discover(config.repo()) {
         Ok(repository) => Ok(repository),
@@ -84,10 +96,10 @@ pub fn discover_or_clone(config: &RepoConfig) -> Result<Repository> {
 
                 if !curr_state.progress.is_empty() {
                     write!(t, "{}", &curr_state.progress).expect("");
-                    let _ = t.carriage_return().expect("");
+                    t.carriage_return().expect("");
                 }
 
-                let _ = t.flush().expect("");
+                t.flush().expect("");
                 res
             };
 
@@ -97,8 +109,8 @@ pub fn discover_or_clone(config: &RepoConfig) -> Result<Repository> {
                 let res = callbacks::sideband(&mut sideband_state.borrow_mut(), bytes);
                 let curr_state = sideband_state.borrow();
                 write!(st, "{}", &curr_state.sideband).expect("");
-                let _ = st.carriage_return().expect("");
-                let _ = st.flush().expect("");
+                st.carriage_return().expect("");
+                st.flush().expect("");
                 res
             };
 
