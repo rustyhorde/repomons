@@ -6,7 +6,7 @@ url = "jozias@jasonozias.com:repos/ar2.git"
 
 [[repos.ar2.branch]]
 name = "master"
-interval = "1m"
+interval = "1h"
 remotes = ["origin"]
 
 [[repos.node.remotes]]
@@ -15,7 +15,7 @@ url = "git@github.com:nodejs/node.git"
 
 [[repos.node.branch]]
 name = "master"
-interval = "1m"
+interval = "15m"
 remotes = ["origin"]
 
 [[repos.repomons.remotes]]
@@ -36,5 +36,5 @@ url = "git@gitlab.com:rustyhorde/repomon.git"
 
 [[repos.repomons.branch]]
 name = "master"
-interval = "30s"
+interval = "5m"
 remotes = ["origin", "gh", "bb"]

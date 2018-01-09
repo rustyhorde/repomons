@@ -13,7 +13,7 @@ use error::Result;
 use futures::future::result;
 use futures::sync::mpsc;
 use futures::{Future, Sink};
-use git2::{self, FetchOptions, FetchPrune, Oid, Repository, Status};
+use git2::{self, FetchOptions, FetchPrune, Oid, ProxyOptions, Repository, Status};
 use log::Logs;
 use rand;
 use rand::distributions::{IndependentSample, Range};
@@ -114,8 +114,12 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
 
     let repo = repo::discover_or_clone(&repo_config)?;
 
+    let mut proxy_opts = ProxyOptions::new();
+    proxy_opts.auto();
+
     let mut fetch_opts = FetchOptions::new();
     fetch_opts.remote_callbacks(callbacks::get_default());
+    fetch_opts.proxy_options(proxy_opts);
     fetch_opts.prune(FetchPrune::On);
 
     loop {
@@ -129,7 +133,13 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
 
         // Run a fetch on the remotes we are monitoring.
         for remote in config.branch().remotes() {
-            try_debug!(config.logs.stdout(), "Fetching"; "remote" => remote, "branch" => branch_name);
+            try_debug!(
+                config.logs.stdout(),
+                "Fetching";
+                "remote" => remote,
+                "repository" => repo_name,
+                "branch" => branch_name
+            );
             repo.find_remote(remote)?
                 .fetch(&[branch_name], Some(&mut fetch_opts), None)?;
         }
@@ -146,7 +156,13 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
                 remote_name
             })
             .map(|remote_name| {
-                try_debug!(config.logs().stdout(), "Looking up OID"; "remote" => &remote_name);
+                try_debug!(
+                    config.logs().stdout(),
+                    "Looking up OID";
+                    "remote" => &remote_name,
+                    "repository" => repo_name,
+                    "branch" => branch_name
+                );
                 (
                     remote_name.clone(),
                     get_oid_by_spec(&repo, &remote_name).expect(""),
