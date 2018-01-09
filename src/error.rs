@@ -14,5 +14,6 @@ error_chain!{
         Infallible(::std::convert::Infallible);
         Io(::std::io::Error);
         Repomon(::repomon::Error);
+        TryFromInt(::std::num::TryFromIntError);
     }
 }

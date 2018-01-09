@@ -14,6 +14,8 @@
 extern crate error_chain;
 #[macro_use]
 extern crate getset;
+// #[macro_use]
+// extern crate lazy_static;
 #[macro_use]
 extern crate slog;
 #[macro_use]
@@ -27,6 +29,7 @@ extern crate rand;
 extern crate repomon;
 extern crate slog_async;
 extern crate slog_term;
+extern crate term;
 extern crate tokio_core;
 extern crate tokio_io;
 extern crate uuid;

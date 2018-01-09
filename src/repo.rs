@@ -9,11 +9,14 @@
 //! `repomon` repository operations.
 use callbacks;
 use error::Result;
-use git2::{FetchOptions, Repository};
+use git2::{FetchOptions, Progress, Repository};
 use git2::build::RepoBuilder;
 use repomon::Remote;
+use std::cell::RefCell;
 use std::env;
 use std::path::PathBuf;
+use std::rc::Rc;
+use term;
 
 #[derive(Clone, Debug, Default, Getters, Setters)]
 pub struct RepoConfig<'a> {
@@ -26,6 +29,33 @@ pub struct RepoConfig<'a> {
     #[get = "pub"]
     #[set = "pub"]
     remotes: &'a [Remote],
+}
+
+#[derive(PartialEq)]
+pub enum CloneState {
+    Receiving,
+    Resolving,
+}
+
+#[derive(Getters, MutGetters, Setters)]
+pub struct CloneOutput {
+    #[get_mut = "pub"] sideband: Vec<String>,
+    #[set = "pub"]
+    #[get_mut = "pub"]
+    progress: String,
+    #[get = "pub"]
+    #[set = "pub"]
+    state: CloneState,
+}
+
+impl Default for CloneOutput {
+    fn default() -> CloneOutput {
+        CloneOutput {
+            sideband: vec![],
+            progress: String::new(),
+            state: CloneState::Receiving,
+        }
+    }
 }
 
 /// Discover the given repository at the given base directory, to try to clone it there.
@@ -42,8 +72,56 @@ pub fn discover_or_clone(config: &RepoConfig) -> Result<Repository> {
                 .ok_or("origin remote not found")?;
             let mut repo_builder = RepoBuilder::new();
 
+            let mut clone_output: CloneOutput = Default::default();
+            let shared_state: Rc<RefCell<_>> = Rc::new(RefCell::new(clone_output));
+
+            let progress_state = Rc::clone(&shared_state);
+            let mut t = term::stdout().ok_or("unable to create stdout term")?;
+            writeln!(t, "Cloning into '{}'...", config.repo().display())?;
+            let progress_fn = move |progress: Progress| -> bool {
+                let res = callbacks::progress(&mut progress_state.borrow_mut(), progress);
+                let curr_state = progress_state.borrow();
+
+                if !curr_state.progress.is_empty() {
+                    write!(t, "{}", &curr_state.progress).expect("");
+                    let _ = t.carriage_return().expect("");
+                }
+
+                let _ = t.flush().expect("");
+                res
+            };
+
+            let sideband_state = Rc::clone(&shared_state);
+            let mut st = term::stdout().ok_or("unable to create stdout term")?;
+            let sideband_fn = move |bytes: &[u8]| -> bool {
+                let res = callbacks::sideband(&mut sideband_state.borrow_mut(), bytes);
+                // let curr_state = sideband_state.borrow();
+                // let _ = st.carriage_return().expect("");
+                // let mut lines_printed = 0;
+                // for sideband in &curr_state.sideband {
+                //     write!(st, "{}", sideband).expect("");
+                //     lines_printed += 1;
+                // }
+
+                // if !curr_state.progress.is_empty() {
+                //     write!(st, "{}", &curr_state.progress).expect("");
+                //     let _ = st.carriage_return().expect("");
+                //     lines_printed = 0;
+                // }
+
+                // for _ in 0..lines_printed {
+                //     let _ = st.cursor_up().expect("");
+                // }
+                res
+            };
+
+            let mut remote_callbacks = callbacks::get_default();
+            remote_callbacks.transfer_progress(progress_fn);
+            remote_callbacks.sideband_progress(sideband_fn);
+            remote_callbacks.credentials(callbacks::check_creds);
+
             let mut fetch_opts = FetchOptions::new();
-            fetch_opts.remote_callbacks(callbacks::get_default());
+            fetch_opts.remote_callbacks(remote_callbacks);
             repo_builder.fetch_options(fetch_opts);
 
             match repo_builder.clone(origin.url(), config.repo().as_ref()) {
