@@ -7,22 +7,11 @@
 // modified, or distributed except according to those terms.
 
 //! `repomons` callbacks
-use error::Result;
+use error::{Error, Result};
 use git2::{self, Cred, CredentialType, Progress, RemoteCallbacks};
-// use log::Logs;
 use repo::{CloneOutput, CloneState};
-// use slog::Level;
 use std::convert::TryFrom;
-
-// lazy_static! {
-//     static ref LOGS: Logs = create_logs();
-// }
-
-// fn create_logs() -> Logs {
-//     let mut logs: Logs = Default::default();
-//     logs.set_stdout_level(Level::Info);
-//     logs
-// }
+use std::time::Instant;
 
 /// Check credentials for connecting to remote.
 pub fn check_creds(
@@ -57,8 +46,43 @@ fn to_percent(num_pre: usize, dem_pre: usize) -> Result<String> {
     }
 }
 
-/// Convert the bytes value to a properly unit-ed string.
-fn bytes_to_string(bytes_pre: usize) -> Result<String> {
+/// Supported byte units (that can fit in a usize).
+enum ByteUnits {
+    /// 0 to 1024^1 - 1
+    Byte,
+    /// 1024 to 1024^2 - 1
+    Kibibyte,
+    /// 1024^2 to 1024^3 - 1
+    Mebibyte,
+    /// 1024^3 to 1024^4 - 1
+    Gibibyte,
+    /// 1024^4 to 1024^5 - 1
+    Tebibyte,
+    /// 1024^5 to 1024^6 - 1
+    Pebibyte,
+    /// >1024^6
+    Exbibyte,
+}
+
+impl TryFrom<usize> for ByteUnits {
+    type Error = Error;
+
+    fn try_from(idx: usize) -> Result<Self> {
+        match idx {
+            0 => Ok(ByteUnits::Byte),
+            1 => Ok(ByteUnits::Kibibyte),
+            2 => Ok(ByteUnits::Mebibyte),
+            3 => Ok(ByteUnits::Gibibyte),
+            4 => Ok(ByteUnits::Tebibyte),
+            5 => Ok(ByteUnits::Pebibyte),
+            6 => Ok(ByteUnits::Exbibyte),
+            _ => Err("unsupported byte units index".into()),
+        }
+    }
+}
+
+/// Convert bytes to the maximum unit representation.
+fn bytes_to_max_units(bytes_pre: usize) -> Result<(ByteUnits, usize, usize)> {
     let mut curr_bytes = bytes_pre;
     let mut rem_pre = 0;
     let mut unit_idx = 0;
@@ -66,61 +90,105 @@ fn bytes_to_string(bytes_pre: usize) -> Result<String> {
         curr_bytes /= 1024;
         rem_pre = curr_bytes % 1024;
         unit_idx += 1;
-        // ~1024^6 bytes is currently the max that can fit in a usize, so break here.
+        // ~1024^6 bytes is the max that can fit in a 64-bit usize, so break here.
         if unit_idx == 6 {
             break;
         }
     }
+    Ok((TryFrom::try_from(unit_idx)?, curr_bytes, rem_pre))
+}
 
-    let bytes_inter: u32 = TryFrom::try_from(curr_bytes)?;
-    let bytes: f64 = bytes_inter.into();
-    let rem_inter: u32 = TryFrom::try_from(rem_pre)?;
-    let rem = f64::from(rem_inter) / 1024.;
+/// Convert the bytes value to a properly unit-ed string.
+fn bytes_to_string(bytes_pre: usize) -> Result<String> {
+    let (units, curr_bytes, rem_pre) = bytes_to_max_units(bytes_pre)?;
+    let bytes = f64::from(u32::try_from(curr_bytes)?);
+    let rem = f64::from(u32::try_from(rem_pre)?) / 1024.;
     let two_decimal_down = (100. * (bytes + rem)).floor() / 100.;
 
-    Ok(match unit_idx {
-        0 => format!("{} B", two_decimal_down),
-        1 => format!("{:.2} KiB", two_decimal_down),
-        2 => format!("{:.2} MiB", two_decimal_down),
-        3 => format!("{:.2} GiB", two_decimal_down),
-        4 => format!("{:.2} TiB", two_decimal_down),
-        5 => format!("{:.2} PiB", two_decimal_down),
-        6 | _ => format!("{:.2} EiB", two_decimal_down),
+    Ok(match units {
+        ByteUnits::Byte => format!("{} B", two_decimal_down),
+        ByteUnits::Kibibyte => format!("{:.2} KiB", two_decimal_down),
+        ByteUnits::Mebibyte => format!("{:.2} MiB", two_decimal_down),
+        ByteUnits::Gibibyte => format!("{:.2} GiB", two_decimal_down),
+        ByteUnits::Tebibyte => format!("{:.2} TiB", two_decimal_down),
+        ByteUnits::Pebibyte => format!("{:.2} PiB", two_decimal_down),
+        ByteUnits::Exbibyte => format!("{:.2} EiB", two_decimal_down),
+    })
+}
+
+/// Convert the current bytes to a rate, given the start time.
+fn bytes_to_rate(bytes_pre: usize, start: &Instant) -> Result<String> {
+    let elapsed = start.elapsed();
+    let seconds =
+        f64::from(u32::try_from(elapsed.as_secs())?) + f64::from(elapsed.subsec_nanos()) * 1e-9;
+    let bytes = f64::from(u32::try_from(bytes_pre)?);
+    let mut bytes_per_second = bytes / seconds;
+    let mut unit_idx = 0;
+    while bytes_per_second >= 1024. {
+        bytes_per_second /= 1024.;
+        unit_idx += 1;
+        // ~1024^6 bytes is the max that can fit in a 64-bit usize, so break here.
+        if unit_idx == 6 {
+            break;
+        }
+    }
+    let two_decimal_down = (100. * bytes_per_second).floor() / 100.;
+
+    Ok(match ByteUnits::try_from(unit_idx)? {
+        ByteUnits::Byte => format!("{} B/s", two_decimal_down),
+        ByteUnits::Kibibyte => format!("{:.2} KiB/s", two_decimal_down),
+        ByteUnits::Mebibyte => format!("{:.2} MiB/s", two_decimal_down),
+        ByteUnits::Gibibyte => format!("{:.2} GiB/s", two_decimal_down),
+        ByteUnits::Tebibyte => format!("{:.2} TiB/s", two_decimal_down),
+        ByteUnits::Pebibyte => format!("{:.2} PiB/s", two_decimal_down),
+        ByteUnits::Exbibyte => format!("{:.2} EiB/s", two_decimal_down),
     })
 }
 
 /// Progress remote callback.
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn progress(output: &mut CloneOutput, progress: Progress) -> bool {
-    let indexed_deltas = progress.indexed_deltas();
-    let received_bytes = progress.received_bytes();
     let received_objects = progress.received_objects();
-    let total_deltas = progress.total_deltas();
     let total_objects = progress.total_objects();
 
     if received_objects < total_objects {
+        let received_bytes = progress.received_bytes();
         let received_objects_percent = to_percent(received_objects, total_objects).expect("");
         let received_bytes_str = bytes_to_string(received_bytes).expect("");
+        let rate = bytes_to_rate(received_bytes, output.start()).expect("");
+
         *output.progress_mut() = format!(
-            "Receiving Objects: {} ({}/{}), {} | x.xx MiB/s",
-            received_objects_percent, received_objects, total_objects, received_bytes_str
+            "Receiving Objects: {} ({}/{}), {} | {}",
+            received_objects_percent, received_objects, total_objects, received_bytes_str, rate
         );
     } else if received_objects == total_objects {
         match output.state() {
             CloneState::Receiving => {
+                let received_bytes = progress.received_bytes();
                 let received_objects_percent =
                     to_percent(received_objects, total_objects).expect("");
                 let received_bytes_str = bytes_to_string(received_bytes).expect("");
+                let rate = bytes_to_rate(received_bytes, output.start()).expect("");
 
                 output.set_state(CloneState::Resolving);
                 output.set_progress(format!(
-                    "Receiving Objects: {} ({}/{}), {} | x.xx MiB/s, done.\n",
-                    received_objects_percent, received_objects, total_objects, received_bytes_str
+                    "Receiving Objects: {} ({}/{}), {} | {}, done.\n",
+                    received_objects_percent,
+                    received_objects,
+                    total_objects,
+                    received_bytes_str,
+                    rate
                 ));
             }
             CloneState::Resolving => {
-                let deltas_percent = to_percent(indexed_deltas, total_objects).expect("");
-                if indexed_deltas < total_deltas {
+                let indexed_deltas = progress.indexed_deltas();
+                let total_deltas = progress.total_deltas();
+                let deltas_percent = if total_deltas == 0 {
+                    "0%".to_string()
+                } else {
+                    to_percent(indexed_deltas, total_deltas).expect("")
+                };
+                if indexed_deltas < total_deltas || indexed_deltas == 0 {
                     output.set_progress(format!(
                         "Resolving Deltas: {} ({}/{})",
                         deltas_percent, indexed_deltas, total_deltas

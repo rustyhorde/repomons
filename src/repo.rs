@@ -16,6 +16,7 @@ use std::cell::RefCell;
 use std::env;
 use std::path::PathBuf;
 use std::rc::Rc;
+use std::time::Instant;
 use term;
 
 /// Repository config.
@@ -47,6 +48,9 @@ pub enum CloneState {
 /// Clone output shared state.
 #[derive(Getters, MutGetters, Setters)]
 pub struct CloneOutput {
+    /// The start instant.
+    #[get = "pub"]
+    start: Instant,
     /// The sideband callback output.
     #[get_mut = "pub"]
     sideband: String,
@@ -63,6 +67,7 @@ pub struct CloneOutput {
 impl Default for CloneOutput {
     fn default() -> Self {
         Self {
+            start: Instant::now(),
             sideband: String::new(),
             progress: String::new(),
             state: CloneState::Receiving,
@@ -95,6 +100,7 @@ pub fn discover_or_clone(config: &Config) -> Result<Repository> {
                 let curr_state = progress_state.borrow();
 
                 if !curr_state.progress.is_empty() {
+                    t.delete_line().expect("");
                     write!(t, "{}", &curr_state.progress).expect("");
                     t.carriage_return().expect("");
                 }
@@ -108,6 +114,7 @@ pub fn discover_or_clone(config: &Config) -> Result<Repository> {
             let sideband_fn = move |bytes: &[u8]| -> bool {
                 let res = callbacks::sideband(&mut sideband_state.borrow_mut(), bytes);
                 let curr_state = sideband_state.borrow();
+                st.delete_line().expect("");
                 write!(st, "{}", &curr_state.sideband).expect("");
                 st.carriage_return().expect("");
                 st.flush().expect("");
