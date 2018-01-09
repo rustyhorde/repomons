@@ -39,7 +39,7 @@ pub enum CloneState {
 
 #[derive(Getters, MutGetters, Setters)]
 pub struct CloneOutput {
-    #[get_mut = "pub"] sideband: Vec<String>,
+    #[get_mut = "pub"] sideband: String,
     #[set = "pub"]
     #[get_mut = "pub"]
     progress: String,
@@ -51,7 +51,7 @@ pub struct CloneOutput {
 impl Default for CloneOutput {
     fn default() -> CloneOutput {
         CloneOutput {
-            sideband: vec![],
+            sideband: String::new(),
             progress: String::new(),
             state: CloneState::Receiving,
         }
@@ -95,23 +95,10 @@ pub fn discover_or_clone(config: &RepoConfig) -> Result<Repository> {
             let mut st = term::stdout().ok_or("unable to create stdout term")?;
             let sideband_fn = move |bytes: &[u8]| -> bool {
                 let res = callbacks::sideband(&mut sideband_state.borrow_mut(), bytes);
-                // let curr_state = sideband_state.borrow();
-                // let _ = st.carriage_return().expect("");
-                // let mut lines_printed = 0;
-                // for sideband in &curr_state.sideband {
-                //     write!(st, "{}", sideband).expect("");
-                //     lines_printed += 1;
-                // }
-
-                // if !curr_state.progress.is_empty() {
-                //     write!(st, "{}", &curr_state.progress).expect("");
-                //     let _ = st.carriage_return().expect("");
-                //     lines_printed = 0;
-                // }
-
-                // for _ in 0..lines_printed {
-                //     let _ = st.cursor_up().expect("");
-                // }
+                let curr_state = sideband_state.borrow();
+                write!(st, "{}", &curr_state.sideband).expect("");
+                let _ = st.carriage_return().expect("");
+                let _ = st.flush().expect("");
                 res
             };
 

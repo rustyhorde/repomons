@@ -39,9 +39,7 @@ pub fn check_creds(
 
 /// Side band remote callback.
 pub fn sideband(output: &mut CloneOutput, text: &[u8]) -> bool {
-    output
-        .sideband_mut()
-        .push(String::from_utf8_lossy(text).into_owned());
+    *output.sideband_mut() = String::from_utf8_lossy(text).into_owned();
     true
 }
 

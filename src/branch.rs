@@ -13,7 +13,7 @@ use error::Result;
 use futures::future::result;
 use futures::sync::mpsc;
 use futures::{Future, Sink};
-use git2::{self, BranchType, FetchOptions, FetchPrune, Oid, Repository, Status};
+use git2::{self, FetchOptions, FetchPrune, Oid, Repository, Status};
 use log::Logs;
 use rand;
 use rand::distributions::{IndependentSample, Range};
@@ -115,11 +115,12 @@ pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
 
         // Run a fetch on the remotes we are monitoring.
         for remote in config.branch().remotes() {
+            try_debug!(config.logs.stdout(), "Fetching"; "remote" => remote, "branch" => branch_name);
             repo.find_remote(remote)?
                 .fetch(&[branch_name], Some(&mut fetch_opts), None)?;
         }
 
-        let local_branch_oid = get_oid_by_branch_name(&repo, branch_name, Some(BranchType::Local))?;
+        let local_branch_oid = vec![get_oid_by_spec(&repo, branch_name)?];
         let remote_oids = config
             .branch()
             .remotes()
@@ -134,15 +135,13 @@ pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
                 try_debug!(config.logs().stdout(), "Looking up OID"; "remote" => &remote_name);
                 (
                     remote_name.clone(),
-                    get_oid_by_branch_name(&repo, &remote_name, Some(BranchType::Remote))
-                        .expect(""),
+                    get_oid_by_spec(&repo, &remote_name).expect(""),
                 )
             })
-            .collect::<HashMap<String, Vec<Oid>>>();
+            .collect::<HashMap<String, Oid>>();
 
-        for (remote_name, remote_oids) in &remote_oids {
-            for remote_oid in remote_oids {
-                try_debug!(
+        for (remote_name, remote_oid) in &remote_oids {
+            try_debug!(
                     config.logs().stdout(),
                     "Remote OID";
                     "remote_name" => remote_name,
@@ -150,18 +149,16 @@ pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
                     "repository" => repo_name,
                     "branch" => branch_name
                 );
-            }
         }
 
-        for (local_oid, (remote_name, remote_oids)) in
+        for (local_oid, (remote_name, remote_oid)) in
             local_branch_oid.iter().cycle().zip(remote_oids.iter())
         {
-            for remote_oid in remote_oids {
-                let (ahead, behind) = repo.graph_ahead_behind(*local_oid, *remote_oid)?;
+            let (ahead, behind) = repo.graph_ahead_behind(*local_oid, *remote_oid)?;
 
-                if ahead > 0 || behind > 0 {
-                    if ahead > 0 {
-                        try_info!(
+            if ahead > 0 || behind > 0 {
+                if ahead > 0 {
+                    try_info!(
                             config.logs().stdout(),
                             "Your branch is ahead of '{}' by {} commit(s)",
                             remote_name,
@@ -169,10 +166,10 @@ pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
                             "repository" => repo_name,
                             "branch" => branch_name
                         );
-                    }
+                }
 
-                    if behind > 0 {
-                        try_info!(
+                if behind > 0 {
+                    try_info!(
                             config.logs().stdout(),
                             "Your branch is behind '{}' by {} commit(s)",
                             remote_name,
@@ -180,16 +177,15 @@ pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
                             "repository" => repo_name,
                             "branch" => branch_name
                         );
-                    }
-                } else {
-                    try_info!(
+                }
+            } else {
+                try_info!(
                         config.logs().stdout(),
                         "Your branch is up to date with '{}'",
                         remote_name;
                         "repository" => repo_name,
                         "branch" => branch_name
                     );
-                }
             }
         }
 
@@ -222,26 +218,9 @@ pub fn monitor_branch(config: MonitorConfig) -> Result<()> {
     }
 }
 
-/// Get an OID for a branch given a name.
-pub fn get_oid_by_branch_name(
-    repo: &Repository,
-    branch_name: &str,
-    branch_type: Option<BranchType>,
-) -> Result<Vec<Oid>> {
-    Ok(repo.branches(branch_type)?
-        .filter_map(|branch_res| branch_res.ok())
-        .filter_map(|(branch, _)| {
-            if let Ok(Some(bn)) = branch.name() {
-                if bn == branch_name {
-                    branch.get().target()
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<Oid>>())
+/// Get the OID for the latest commit in the given spec.
+pub fn get_oid_by_spec(repo: &Repository, spec: &str) -> Result<Oid> {
+    Ok(repo.revparse_single(spec)?.id())
 }
 
 /// Convert a status to a composite string.
