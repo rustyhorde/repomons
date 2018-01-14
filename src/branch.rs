@@ -8,7 +8,7 @@
 
 //! branch related operations
 use bincode::{serialize, Infinite};
-use callbacks;
+use callbacks::{self, CallbackOutput};
 use error::Result;
 use futures::future::result;
 use futures::sync::mpsc;
@@ -103,7 +103,13 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     let mut rng = rand::thread_rng();
     let between = Range::new(0, interval / 5);
     let rand_delay: u64 = TryFrom::try_from(between.ind_sample(&mut rng))?;
-    try_trace!(config.logs().stdout(), "Delaying monitor start"; "ms" => rand_delay, "repository" => repo_name, "branch" => branch_name);
+    try_trace!(
+        config.logs().stdout(),
+        "Delaying monitor start";
+        "ms" => rand_delay,
+        "repository" => repo_name,
+        "branch" => branch_name
+    );
     thread::sleep(Duration::from_millis(rand_delay));
 
     // Setup some config, used to discover/clone the repository
@@ -117,8 +123,11 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     let mut proxy_opts = ProxyOptions::new();
     proxy_opts.auto();
 
+    let fetch_output: CallbackOutput = Default::default();
+    let remote_callbacks = callbacks::get_default(fetch_output)?;
+
     let mut fetch_opts = FetchOptions::new();
-    fetch_opts.remote_callbacks(callbacks::get_default());
+    fetch_opts.remote_callbacks(remote_callbacks);
     fetch_opts.proxy_options(proxy_opts);
     fetch_opts.prune(FetchPrune::On);
 

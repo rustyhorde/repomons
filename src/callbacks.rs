@@ -9,10 +9,50 @@
 //! `repomons` callbacks
 use error::{Error, Result};
 use git2::{self, Cred, CredentialType, Progress, RemoteCallbacks};
-use repo::{CloneOutput, CloneState};
+use std::cell::RefCell;
 use std::convert::TryFrom;
+use std::rc::Rc;
 use std::time::Instant;
+use term;
 
+/// The clone state.
+#[derive(PartialEq)]
+pub enum CloneState {
+    /// Receiving objects.
+    Receiving,
+    /// Resolving deltas.
+    Resolving,
+}
+
+/// Clone output shared state.
+#[derive(Getters, MutGetters, Setters)]
+pub struct CallbackOutput {
+    /// The start instant.
+    #[get = "pub"]
+    start: Instant,
+    /// The sideband callback output.
+    #[get_mut = "pub"]
+    sideband: String,
+    /// The progress callback output.
+    #[set = "pub"]
+    #[get_mut = "pub"]
+    progress: String,
+    /// The current state.
+    #[get = "pub"]
+    #[set = "pub"]
+    state: CloneState,
+}
+
+impl Default for CallbackOutput {
+    fn default() -> Self {
+        Self {
+            start: Instant::now(),
+            sideband: String::new(),
+            progress: String::new(),
+            state: CloneState::Receiving,
+        }
+    }
+}
 /// Check credentials for connecting to remote.
 pub fn check_creds(
     _url: &str,
@@ -27,7 +67,7 @@ pub fn check_creds(
 }
 
 /// Side band remote callback.
-pub fn sideband(output: &mut CloneOutput, text: &[u8]) -> bool {
+pub fn sideband(output: &mut CallbackOutput, text: &[u8]) -> bool {
     *output.sideband_mut() = String::from_utf8_lossy(text).into_owned();
     true
 }
@@ -147,7 +187,7 @@ fn bytes_to_rate(bytes_pre: usize, start: &Instant) -> Result<String> {
 
 /// Progress remote callback.
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-pub fn progress(output: &mut CloneOutput, progress: Progress) -> bool {
+pub fn progress(output: &mut CallbackOutput, progress: Progress) -> bool {
     let received_objects = progress.received_objects();
     let total_objects = progress.total_objects();
 
@@ -207,12 +247,45 @@ pub fn progress(output: &mut CloneOutput, progress: Progress) -> bool {
 }
 
 /// Setup the default set of callbacks.
-pub fn get_default<'a>() -> RemoteCallbacks<'a> {
+pub fn get_default<'a>(output: CallbackOutput) -> Result<RemoteCallbacks<'a>> {
+    let shared_state: Rc<RefCell<_>> = Rc::new(RefCell::new(output));
+
+    // Setup the progress callback.
+    let progress_state = Rc::clone(&shared_state);
+    let mut t = term::stdout().ok_or("unable to create stdout term")?;
+
+    let progress_fn = move |progress_info: Progress| -> bool {
+        let res = progress(&mut progress_state.borrow_mut(), progress_info);
+        let curr_state = progress_state.borrow();
+
+        if !curr_state.progress.is_empty() {
+            t.delete_line().expect("");
+            write!(t, "{}", &curr_state.progress).expect("");
+            t.carriage_return().expect("");
+        }
+
+        t.flush().expect("");
+        res
+    };
+
+    // Setup the sideband callback.
+    let sideband_state = Rc::clone(&shared_state);
+    let mut st = term::stdout().ok_or("unable to create stdout term")?;
+    let sideband_fn = move |bytes: &[u8]| -> bool {
+        let res = sideband(&mut sideband_state.borrow_mut(), bytes);
+        let curr_state = sideband_state.borrow();
+        st.delete_line().expect("");
+        write!(st, "{}", &curr_state.sideband).expect("");
+        st.carriage_return().expect("");
+        st.flush().expect("");
+        res
+    };
+
     let mut rcb = RemoteCallbacks::new();
-    // rcb.transfer_progress(progress);
-    // rcb.sideband_progress(side_band);
+    rcb.transfer_progress(progress_fn);
+    rcb.sideband_progress(sideband_fn);
     rcb.credentials(check_creds);
-    rcb
+    Ok(rcb)
 }
 
 #[cfg(test)]

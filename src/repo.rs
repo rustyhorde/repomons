@@ -7,16 +7,13 @@
 // modified, or distributed except according to those terms.
 
 //! `repomon` repository operations.
-use callbacks;
+use callbacks::{self, CallbackOutput};
 use error::Result;
-use git2::{FetchOptions, Progress, Repository};
+use git2::{FetchOptions, Repository};
 use git2::build::RepoBuilder;
 use repomon::Remote;
-use std::cell::RefCell;
 use std::env;
 use std::path::PathBuf;
-use std::rc::Rc;
-use std::time::Instant;
 use term;
 
 /// Repository config.
@@ -36,45 +33,6 @@ pub struct Config<'a> {
     remotes: &'a [Remote],
 }
 
-/// The clone state.
-#[derive(PartialEq)]
-pub enum CloneState {
-    /// Receiving objects.
-    Receiving,
-    /// Resolving deltas.
-    Resolving,
-}
-
-/// Clone output shared state.
-#[derive(Getters, MutGetters, Setters)]
-pub struct CloneOutput {
-    /// The start instant.
-    #[get = "pub"]
-    start: Instant,
-    /// The sideband callback output.
-    #[get_mut = "pub"]
-    sideband: String,
-    /// The progress callback output.
-    #[set = "pub"]
-    #[get_mut = "pub"]
-    progress: String,
-    /// The current state.
-    #[get = "pub"]
-    #[set = "pub"]
-    state: CloneState,
-}
-
-impl Default for CloneOutput {
-    fn default() -> Self {
-        Self {
-            start: Instant::now(),
-            sideband: String::new(),
-            progress: String::new(),
-            state: CloneState::Receiving,
-        }
-    }
-}
-
 /// Discover the given repository at the given base directory, to try to clone it there.
 pub fn discover_or_clone(config: &Config) -> Result<Repository> {
     env::set_current_dir(config.basedir())?;
@@ -89,47 +47,16 @@ pub fn discover_or_clone(config: &Config) -> Result<Repository> {
                 .ok_or("origin remote not found")?;
             let mut repo_builder = RepoBuilder::new();
 
-            let mut clone_output: CloneOutput = Default::default();
-            let shared_state: Rc<RefCell<_>> = Rc::new(RefCell::new(clone_output));
-
-            let progress_state = Rc::clone(&shared_state);
             let mut t = term::stdout().ok_or("unable to create stdout term")?;
-            writeln!(t, "Cloning into '{}'...", config.repo().display())?;
-            let progress_fn = move |progress: Progress| -> bool {
-                let res = callbacks::progress(&mut progress_state.borrow_mut(), progress);
-                let curr_state = progress_state.borrow();
-
-                if !curr_state.progress.is_empty() {
-                    t.delete_line().expect("");
-                    write!(t, "{}", &curr_state.progress).expect("");
-                    t.carriage_return().expect("");
-                }
-
-                t.flush().expect("");
-                res
-            };
-
-            let sideband_state = Rc::clone(&shared_state);
-            let mut st = term::stdout().ok_or("unable to create stdout term")?;
-            let sideband_fn = move |bytes: &[u8]| -> bool {
-                let res = callbacks::sideband(&mut sideband_state.borrow_mut(), bytes);
-                let curr_state = sideband_state.borrow();
-                st.delete_line().expect("");
-                write!(st, "{}", &curr_state.sideband).expect("");
-                st.carriage_return().expect("");
-                st.flush().expect("");
-                res
-            };
-
-            let mut remote_callbacks = callbacks::get_default();
-            remote_callbacks.transfer_progress(progress_fn);
-            remote_callbacks.sideband_progress(sideband_fn);
-            remote_callbacks.credentials(callbacks::check_creds);
+            let mut clone_output: CallbackOutput = Default::default();
+            let mut remote_callbacks = callbacks::get_default(clone_output)?;
 
             let mut fetch_opts = FetchOptions::new();
             fetch_opts.remote_callbacks(remote_callbacks);
+
             repo_builder.fetch_options(fetch_opts);
 
+            writeln!(t, "Cloning into '{}'...", config.repo().display())?;
             match repo_builder.clone(origin.url(), config.repo().as_ref()) {
                 Ok(repository) => Ok(repository),
                 Err(e) => Err(format!("Unable to clone repository: {}", e).into()),
