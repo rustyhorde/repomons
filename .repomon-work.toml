@@ -1,0 +1,27 @@
+basedir = "/home/jozias/projects/repomon"
+
+[[repos.node.remotes]]
+name = "origin"
+url = "https://github.com/nodejs/node.git"
+
+[[repos.node.branch]]
+name = "master"
+interval = "15m"
+remotes = ["origin"]
+
+[[repos.repomons.remotes]]
+name = "origin"
+url = "https://github.com/rustyhorde/repomons.git"
+
+[[repos.repomons.remotes]]
+name = "bb"
+url = "https://bitbucket.org/rustyhorde/repomons.git"
+
+[[repos.repomons.remotes]]
+name = "gl"
+url = "https://gitlab.com/rustyhorde/repomons.git"
+
+[[repos.repomons.branch]]
+name = "master"
+interval = "5m"
+remotes = ["origin"]
