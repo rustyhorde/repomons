@@ -1,4 +1,4 @@
-basedir = "/home/jozias/projects/rust-lang"
+basedir = "/home/jozias/projects/repomon"
 
 [[repos.ar2.remotes]]
 name = "origin"
@@ -18,23 +18,86 @@ name = "master"
 interval = "15m"
 remotes = ["origin"]
 
-[[repos.repomons.remotes]]
+[[repos.repomon.remotes]]
 name = "origin"
 url = "jozias@jasonozias.com:repos/repomon.git"
 
-[[repos.repomons.remotes]]
+[[repos.repomon.remotes]]
 name = "gh"
-url = "git@github.com:rustyhorde/repomon.git"
+url = "https://github.com/rustyhorde/repomon.git"
 
-[[repos.repomons.remotes]]
+[[repos.repomon.remotes]]
 name = "bb"
 url = "git@bitbucket.org:rustyhorde/repomon.git"
 
-[[repos.repomons.remotes]]
+[[repos.repomon.remotes]]
 name = "gl"
 url = "git@gitlab.com:rustyhorde/repomon.git"
 
 [[repos.repomons.branch]]
 name = "master"
 interval = "5m"
-remotes = ["origin", "gh", "bb"]
+remotes = ["origin", "gh", "bb", "gl"]
+
+[[repos.repomons.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/repomons.git"
+
+[[repos.repomons.remotes]]
+name = "gh"
+url = "https://github.com/rustyhorde/repomons.git"
+
+[[repos.repomons.remotes]]
+name = "bb"
+url = "git@bitbucket.org:rustyhorde/repomons.git"
+
+[[repos.repomons.remotes]]
+name = "gl"
+url = "git@gitlab.com:rustyhorde/repomons.git"
+
+[[repos.repomons.branch]]
+name = "master"
+interval = "5m"
+remotes = ["origin", "gh", "bb", "gl"]
+
+[[repos.repomonc.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/repomonc.git"
+
+[[repos.repomonc.remotes]]
+name = "gh"
+url = "https://github.com/rustyhorde/repomonc.git"
+
+[[repos.repomonc.remotes]]
+name = "bb"
+url = "git@bitbucket.org:rustyhorde/repomonc.git"
+
+[[repos.repomonc.remotes]]
+name = "gl"
+url = "git@gitlab.com:rustyhorde/repomonc.git"
+
+[[repos.repomonc.branch]]
+name = "master"
+interval = "5m"
+remotes = ["origin", "gh", "bb", "gl"]
+
+[[repos.rsjni.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/rsjni.git"
+
+[[repos.rsjni.remotes]]
+name = "gh"
+url = "https://github.com/rustyhorde/rsjni.git"
+
+[[repos.rsjni.remotes]]
+name = "bb"
+url = "git@bitbucket.org:rustyhorde/rsjni.git"
+
+[[repos.rsjni.remotes]]
+name = "gl"
+url = "git@gitlab.com:rustyhorde/rsjni.git"
+
+[[repos.rsjni.branch]]
+name = "master"
+interval = "5m"
+remotes = ["origin", "gh", "bb", "gl"]
