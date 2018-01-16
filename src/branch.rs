@@ -19,7 +19,7 @@ use rand;
 use rand::distributions::{IndependentSample, Range};
 use repomon::{Branch, Message, Remote};
 use repo::{self, Config};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
 use std::path::PathBuf;
 use std::thread;
@@ -95,8 +95,6 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     // Setup the base message.
     let mut message: Message = Default::default();
     message.set_repo(repo_name.clone());
-    message.set_branch(config.branch().clone());
-    message.set_count(0);
 
     // Delay start up to 20% to avoid running all the same intervals
     // at the same time.
@@ -119,6 +117,7 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     repo_config.set_remotes(config.remotes());
 
     let repo = repo::discover_or_clone(&repo_config)?;
+    repo::check_remotes(&repo, &repo_config)?;
 
     let mut proxy_opts = ProxyOptions::new();
     proxy_opts.auto();
@@ -134,7 +133,6 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     loop {
         // Add some loop specific information to the message.
         let mut msg_clone = message.clone();
-        msg_clone.set_count(interval);
         msg_clone.set_uuid(Uuid::new_v4());
 
         // Metrics
@@ -181,52 +179,60 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
 
         for (remote_name, remote_oid) in &remote_oids {
             try_debug!(
-                    config.logs().stdout(),
-                    "Remote OID";
-                    "remote_name" => remote_name,
-                    "oid" => format!("{}", remote_oid),
-                    "repository" => repo_name,
-                    "branch" => branch_name
-                );
+                config.logs().stdout(),
+                "Remote OID";
+                "remote_name" => remote_name,
+                "oid" => format!("{}", remote_oid),
+                "repository" => repo_name,
+                "branch" => branch_name
+            );
         }
+
+        let mut messages = BTreeMap::new();
+        let mut branch: Branch = Default::default();
+        branch.set_name(branch_name.to_string());
+
+        let mut remote_messages = BTreeMap::new();
 
         for (local_oid, (remote_name, remote_oid)) in
             local_branch_oid.iter().cycle().zip(remote_oids.iter())
         {
+            let mut remote: Remote = Default::default();
+            remote.set_name(remote_name.to_string());
+
             let (ahead, behind) = repo.graph_ahead_behind(*local_oid, *remote_oid)?;
+
+            let mut message = String::new();
 
             if ahead > 0 || behind > 0 {
                 if ahead > 0 {
-                    try_info!(
-                            config.logs().stdout(),
-                            "Your branch is ahead of '{}' by {} commit(s)",
-                            remote_name,
-                            ahead;
-                            "repository" => repo_name,
-                            "branch" => branch_name
-                        );
+                    message = format!(
+                        "Your branch is ahead of '{}' by {} commit(s)",
+                        remote_name, ahead
+                    );
                 }
 
                 if behind > 0 {
-                    try_info!(
-                            config.logs().stdout(),
-                            "Your branch is behind '{}' by {} commit(s)",
-                            remote_name,
-                            behind;
-                            "repository" => repo_name,
-                            "branch" => branch_name
-                        );
+                    message = format!(
+                        "Your branch is behind '{}' by {} commit(s)",
+                        remote_name, behind
+                    );
                 }
             } else {
-                try_info!(
-                        config.logs().stdout(),
-                        "Your branch is up to date with '{}'",
-                        remote_name;
-                        "repository" => repo_name,
-                        "branch" => branch_name
-                    );
+                message = format!("Your branch is up to date with '{}'", remote_name);
             }
+            try_info!(
+                config.logs().stdout(),
+                "{}",
+                message;
+                "repository" => repo_name,
+                "branch" => branch_name
+            );
+            remote_messages.insert(remote, message);
         }
+
+        messages.insert(branch, remote_messages);
+        msg_clone.set_messages(messages);
 
         let f = result::<(), ()>(Ok(()));
         let tx = config.tx().clone();

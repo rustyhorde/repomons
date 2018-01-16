@@ -8,7 +8,7 @@
 
 //! `repomons` callbacks
 use error::{Error, Result};
-use git2::{self, Cred, CredentialType, Progress, RemoteCallbacks};
+use git2::{self, Config, Cred, CredentialType, Progress, RemoteCallbacks};
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::rc::Rc;
@@ -55,15 +55,29 @@ impl Default for CallbackOutput {
 }
 /// Check credentials for connecting to remote.
 pub fn check_creds(
-    _url: &str,
+    url: &str,
     username: Option<&str>,
     cred_type: CredentialType,
 ) -> ::std::result::Result<Cred, git2::Error> {
     if cred_type.contains(git2::SSH_KEY) {
-        Cred::ssh_key_from_agent(username.unwrap_or(""))
-    } else {
-        Err(git2::Error::from_str("Unable to authenticate"))
+        match Cred::ssh_key_from_agent(username.unwrap_or("")) {
+            Ok(cred) => return Ok(cred),
+            Err(_e) => {}
+        }
     }
+
+    if cred_type.contains(git2::USER_PASS_PLAINTEXT) {
+        if let Ok(config) = Config::open_default() {
+            match Cred::credential_helper(&config, url, username) {
+                Ok(cred) => return Ok(cred),
+                Err(_e) => {}
+            }
+
+            // TODO: Prompt for username/password here?
+        }
+    }
+
+    Err(git2::Error::from_str("Unable to authenticate"))
 }
 
 /// Side band remote callback.

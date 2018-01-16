@@ -57,10 +57,39 @@ pub fn discover_or_clone(config: &Config) -> Result<Repository> {
             repo_builder.fetch_options(fetch_opts);
 
             writeln!(t, "Cloning into '{}'...", config.repo().display())?;
-            match repo_builder.clone(origin.url(), config.repo().as_ref()) {
-                Ok(repository) => Ok(repository),
-                Err(e) => Err(format!("Unable to clone repository: {}", e).into()),
+            let repo = match repo_builder.clone(origin.url(), config.repo().as_ref()) {
+                Ok(repository) => repository,
+                Err(e) => return Err(format!("Unable to clone repository: {}", e).into()),
+            };
+
+            if check_remotes(&repo, config).is_ok() {
+                Ok(repo)
+            } else {
+                Err("Unable to add remotes to repository".into())
             }
         }
     }
+}
+
+/// Check the remotes for the given repository and add if they don't exist.
+pub fn check_remotes(repo: &Repository, config: &Config) -> Result<()> {
+    let other_remotes: Vec<Remote> = config
+        .remotes()
+        .iter()
+        .filter(|x| x.name() != "origin")
+        .cloned()
+        .collect();
+
+    for c_remote in other_remotes {
+        let name = c_remote.name();
+        let url = c_remote.url();
+        match repo.find_remote(name) {
+            Ok(_) => {}
+            Err(_e) => match repo.remote(name, url) {
+                Ok(_) => {}
+                Err(e) => return Err(format!("Unable to add remote '{}': {}", name, e).into()),
+            },
+        }
+    }
+    Ok(())
 }

@@ -1,5 +1,9 @@
 basedir = "/home/jozias/projects/repomon"
 
+#####
+# node
+#####
+
 [[repos.node.remotes]]
 name = "origin"
 url = "https://github.com/nodejs/node.git"
@@ -8,6 +12,31 @@ url = "https://github.com/nodejs/node.git"
 name = "master"
 interval = "15m"
 remotes = ["origin"]
+
+#####
+# repomon
+#####
+
+[[repos.repomon.remotes]]
+name = "origin"
+url = "https://github.com/rustyhorde/repomon.git"
+
+[[repos.repomon.remotes]]
+name = "bb"
+url = "https://bitbucket.org/rustyhorde/repomon.git"
+
+[[repos.repomon.remotes]]
+name = "gl"
+url = "https://gitlab.com/rustyhorde/repomon.git"
+
+[[repos.repomon.branch]]
+name = "master"
+interval = "5m"
+remotes = ["origin", "bb", "gl"]
+
+#####
+# repomons
+#####
 
 [[repos.repomons.remotes]]
 name = "origin"
@@ -24,4 +53,24 @@ url = "https://gitlab.com/rustyhorde/repomons.git"
 [[repos.repomons.branch]]
 name = "master"
 interval = "5m"
-remotes = ["origin"]
+remotes = ["origin", "bb", "gl"]
+
+#####
+# repomonc
+#####
+[[repos.repomonc.remotes]]
+name = "origin"
+url = "https://github.com/rustyhorde/repomonc.git"
+
+[[repos.repomonc.remotes]]
+name = "bb"
+url = "https://bitbucket.org/rustyhorde/repomonc.git"
+
+[[repos.repomonc.remotes]]
+name = "gl"
+url = "https://gitlab.com/rustyhorde/repomonc.git"
+
+[[repos.repomonc.branch]]
+name = "master"
+interval = "5m"
+remotes = ["origin", "bb", "gl"]
