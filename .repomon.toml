@@ -24,7 +24,7 @@ url = "jozias@jasonozias.com:repos/repomon.git"
 
 [[repos.repomon.remotes]]
 name = "gh"
-url = "https://github.com/rustyhorde/repomon.git"
+url = "git@github.com:rustyhorde/repomon.git"
 
 [[repos.repomon.remotes]]
 name = "bb"
@@ -34,7 +34,7 @@ url = "git@bitbucket.org:rustyhorde/repomon.git"
 name = "gl"
 url = "git@gitlab.com:rustyhorde/repomon.git"
 
-[[repos.repomons.branch]]
+[[repos.repomon.branch]]
 name = "master"
 interval = "5m"
 remotes = ["origin", "gh", "bb", "gl"]
@@ -45,7 +45,7 @@ url = "jozias@jasonozias.com:repos/repomons.git"
 
 [[repos.repomons.remotes]]
 name = "gh"
-url = "https://github.com/rustyhorde/repomons.git"
+url = "git@github.com:rustyhorde/repomons.git"
 
 [[repos.repomons.remotes]]
 name = "bb"
@@ -66,7 +66,7 @@ url = "jozias@jasonozias.com:repos/repomonc.git"
 
 [[repos.repomonc.remotes]]
 name = "gh"
-url = "https://github.com/rustyhorde/repomonc.git"
+url = "git@github.com:rustyhorde/repomonc.git"
 
 [[repos.repomonc.remotes]]
 name = "bb"
@@ -87,7 +87,7 @@ url = "jozias@jasonozias.com:repos/rsjni.git"
 
 [[repos.rsjni.remotes]]
 name = "gh"
-url = "https://github.com/rustyhorde/rsjni.git"
+url = "git@github.com:rustyhorde/rsjni.git"
 
 [[repos.rsjni.remotes]]
 name = "bb"

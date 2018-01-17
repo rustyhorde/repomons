@@ -13,7 +13,8 @@ use error::Result;
 use futures::future::result;
 use futures::sync::mpsc;
 use futures::{Future, Sink};
-use git2::{self, FetchOptions, FetchPrune, Oid, ProxyOptions, Repository, Status};
+use git2::{self, AutotagOption, Direction, FetchOptions, FetchPrune, Oid, ProxyOptions,
+           Repository, Status};
 use log::Logs;
 use rand;
 use rand::distributions::{IndependentSample, Range};
@@ -119,17 +120,6 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     let repo = repo::discover_or_clone(&repo_config)?;
     repo::check_remotes(&repo, &repo_config)?;
 
-    let mut proxy_opts = ProxyOptions::new();
-    proxy_opts.auto();
-
-    let fetch_output: CallbackOutput = Default::default();
-    let remote_callbacks = callbacks::get_default(fetch_output)?;
-
-    let mut fetch_opts = FetchOptions::new();
-    fetch_opts.remote_callbacks(remote_callbacks);
-    fetch_opts.proxy_options(proxy_opts);
-    fetch_opts.prune(FetchPrune::On);
-
     loop {
         // Add some loop specific information to the message.
         let mut msg_clone = message.clone();
@@ -140,15 +130,53 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
 
         // Run a fetch on the remotes we are monitoring.
         for remote in config.branch().remotes() {
+            let mut git_remote = repo.find_remote(remote)?;
             try_debug!(
                 config.logs.stdout(),
-                "Fetching";
+                "Connecting";
                 "remote" => remote,
                 "repository" => repo_name,
                 "branch" => branch_name
             );
-            repo.find_remote(remote)?
-                .fetch(&[branch_name], Some(&mut fetch_opts), None)?;
+            let mut proxy_opts = ProxyOptions::new();
+            proxy_opts.auto();
+
+            let connect_output: CallbackOutput = Default::default();
+            let connect_callbacks = callbacks::get_default(connect_output)?;
+            git_remote.connect_auth(Direction::Fetch, Some(connect_callbacks), Some(proxy_opts))?;
+
+            try_debug!(
+                config.logs.stdout(),
+                "Downloading";
+                "remote" => remote,
+                "repository" => repo_name,
+                "branch" => branch_name
+            );
+
+            let mut proxy_opts = ProxyOptions::new();
+            proxy_opts.auto();
+
+            let download_output: CallbackOutput = Default::default();
+            let download_callbacks = callbacks::get_default(download_output)?;
+
+            let mut fetch_opts = FetchOptions::new();
+            fetch_opts.remote_callbacks(download_callbacks);
+            fetch_opts.proxy_options(proxy_opts);
+            fetch_opts.prune(FetchPrune::On);
+
+            git_remote.download(&[branch_name], Some(&mut fetch_opts))?;
+
+            try_debug!(
+                config.logs.stdout(),
+                "Updating tips";
+                "remote" => remote,
+                "repository" => repo_name,
+                "branch" => branch_name
+            );
+
+            let update_output: CallbackOutput = Default::default();
+            let mut update_callbacks = callbacks::get_default(update_output)?;
+            git_remote.update_tips(Some(&mut update_callbacks), true, AutotagOption::Auto, None)?;
         }
 
         let local_branch_oid = vec![get_oid_by_spec(&repo, branch_name)?];
