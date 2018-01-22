@@ -9,6 +9,7 @@
 //! branch related operations
 use bincode::{serialize, Infinite};
 use callbacks::{self, CallbackOutput};
+use colored::*;
 use error::Result;
 use futures::future::result;
 use futures::sync::mpsc;
@@ -97,10 +98,10 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     let mut message: Message = Default::default();
     message.set_repo(repo_name.clone());
 
-    // Delay start up to 20% to avoid running all the same intervals
+    // Delay start up to 80% to avoid running all the same intervals
     // at the same time.
     let mut rng = rand::thread_rng();
-    let between = Range::new(0, interval / 5);
+    let between = Range::new(0, (interval * 4) / 5);
     let rand_delay: u64 = TryFrom::try_from(between.ind_sample(&mut rng))?;
     try_trace!(
         config.logs().stdout(),
@@ -235,15 +236,23 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
             if ahead > 0 || behind > 0 {
                 if ahead > 0 {
                     message = format!(
-                        "Your branch is ahead of '{}' by {} commit(s)",
-                        remote_name, ahead
+                        "{}{}{}{}{}",
+                        "Your branch is ahead of '".green(),
+                        remote_name.green(),
+                        "' by ".green(),
+                        ahead.to_string().green(),
+                        " commit(s)".green()
                     );
                 }
 
                 if behind > 0 {
                     message = format!(
-                        "Your branch is behind '{}' by {} commit(s)",
-                        remote_name, behind
+                        "{}{}{}{}{}",
+                        "Your branch is behind '".green(),
+                        remote_name.green(),
+                        "' by ".green(),
+                        behind.to_string().green(),
+                        " commit(s)".green()
                     );
                 }
             } else {

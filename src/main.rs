@@ -21,6 +21,7 @@ extern crate slog_try;
 
 extern crate bincode;
 extern crate clap;
+extern crate colored;
 extern crate futures;
 extern crate git2;
 extern crate rand;
