@@ -1,4 +1,4 @@
-basedir = "/home/jozias/projects/repomon"
+basedir = "/Users/kon8116/projects/repomon"
 
 [[repos.ar2.remotes]]
 name = "origin"

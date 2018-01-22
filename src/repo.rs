@@ -9,10 +9,11 @@
 //! `repomon` repository operations.
 use callbacks::{self, CallbackOutput};
 use error::Result;
-use git2::{FetchOptions, Repository};
+use git2::{FetchOptions, ProxyOptions, Repository};
 use git2::build::RepoBuilder;
 use repomon::Remote;
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 use term;
 
@@ -35,6 +36,9 @@ pub struct Config<'a> {
 
 /// Discover the given repository at the given base directory, to try to clone it there.
 pub fn discover_or_clone(config: &Config) -> Result<Repository> {
+    if fs::metadata(config.basedir()).is_err() {
+        fs::create_dir(config.basedir())?;
+    }
     env::set_current_dir(config.basedir())?;
     match Repository::discover(config.repo()) {
         Ok(repository) => Ok(repository),
@@ -51,8 +55,12 @@ pub fn discover_or_clone(config: &Config) -> Result<Repository> {
             let mut clone_output: CallbackOutput = Default::default();
             let mut remote_callbacks = callbacks::get_default(clone_output)?;
 
+            let mut proxy_opts = ProxyOptions::new();
+            proxy_opts.auto();
+
             let mut fetch_opts = FetchOptions::new();
             fetch_opts.remote_callbacks(remote_callbacks);
+            fetch_opts.proxy_options(proxy_opts);
 
             repo_builder.fetch_options(fetch_opts);
 
