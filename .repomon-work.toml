@@ -213,18 +213,161 @@ name = "dev"
 interval = "15m"
 remotes = ["origin"]
 
-#git@gitlab.kroger.com:msl/postmaster-listener.git
-#git@gitlab.kroger.com:msl/voice-assistant-poc.git
-#git@gitlab.kroger.com:msl/msl-weekly-ads.git
-#git@gitlab.kroger.com:msl/msl-store-locator.git
-#git@gitlab.kroger.com:msl/msl-passbook.git
-#git@gitlab.kroger.com:msl/msl-cart.git
-#git@gitlab.kroger.com:msl/msl-giftcards.git
-#git@gitlab.kroger.com:msl/msl-fulfillment.git
-#git@gitlab.kroger.com:msl/msl-community-rewards.git
-#git@gitlab.kroger.com:msl/msl-shopping-list.git
-#git@gitlab.kroger.com:msl/msl-aisle-feedback.git
-#git@gitlab.kroger.com:msl/mobile-content-api.git
+#####
+# postmaster-listener
+#####
+
+[[repos.postmaster-listener.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/postmaster-listener.git"
+
+[[repos.postmaster-listener.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# voice-assistant-poc
+#####
+
+[[repos.voice-assistant-poc.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/voice-assistant-poc.git"
+
+[[repos.voice-assistant-poc.branch]]
+name = "master"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-weekly-ads
+#####
+
+[[repos.msl-weekly-ads.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-weekly-ads.git"
+
+[[repos.msl-weekly-ads.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-store-locator
+#####
+
+[[repos.msl-store-locator.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-store-locator.git"
+
+[[repos.msl-store-locator.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-passbook
+#####
+
+[[repos.msl-passbook.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-passbook.git"
+
+[[repos.msl-passbook.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-cart
+#####
+
+[[repos.msl-cart.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-cart.git"
+
+[[repos.msl-cart.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-giftcards
+#####
+
+[[repos.msl-giftcards.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-giftcards.git"
+
+[[repos.msl-giftcards.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-fulfillment
+#####
+
+[[repos.msl-fulfillment.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-fulfillment.git"
+
+[[repos.msl-fulfillment.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-community-rewards
+#####
+
+[[repos.msl-community-rewards.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-community-rewards.git"
+
+[[repos.msl-community-rewards.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-shopping-list
+#####
+
+[[repos.msl-shopping-list.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-shopping-list.git"
+
+[[repos.msl-shopping-list.branch]]
+name = "dev"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# msl-aisle-feedback
+#####
+
+[[repos.msl-aisle-feedback.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-aisle-feedback.git"
+
+[[repos.msl-aisle-feedback.branch]]
+name = "master"
+interval = "15m"
+remotes = ["origin"]
+
+#####
+# mobile-content-api
+#####
+
+[[repos.mobile-content-api.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/mobile-content-api.git"
+
+[[repos.mobile-content-api.branch]]
+name = "master"
+interval = "15m"
+remotes = ["origin"]
 
 ##########
 # Utilities
