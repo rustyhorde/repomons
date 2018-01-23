@@ -19,7 +19,7 @@ use git2::{self, AutotagOption, Direction, FetchOptions, FetchPrune, Oid, ProxyO
 use log::Logs;
 use rand;
 use rand::distributions::{IndependentSample, Range};
-use repomon::{Branch, Message, Remote};
+use repomon::{Branch, Category, Message, Remote};
 use repo::{self, Config};
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
@@ -82,7 +82,7 @@ impl MonitorConfig {
 
 /// Monitor
 pub fn monitor(config: &MonitorConfig) -> Result<()> {
-    try_info!(
+    try_trace!(
         config.logs().stdout(),
         "Starting monitor thread";
         "repository" => config.repo_name(),
@@ -132,27 +132,13 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
         // Run a fetch on the remotes we are monitoring.
         for remote in config.branch().remotes() {
             let mut git_remote = repo.find_remote(remote)?;
-            try_debug!(
-                config.logs.stdout(),
-                "Connecting";
-                "remote" => remote,
-                "repository" => repo_name,
-                "branch" => branch_name
-            );
+
             let mut proxy_opts = ProxyOptions::new();
             proxy_opts.auto();
 
             let connect_output: CallbackOutput = Default::default();
             let connect_callbacks = callbacks::get_default(connect_output)?;
             git_remote.connect_auth(Direction::Fetch, Some(connect_callbacks), Some(proxy_opts))?;
-
-            try_debug!(
-                config.logs.stdout(),
-                "Downloading";
-                "remote" => remote,
-                "repository" => repo_name,
-                "branch" => branch_name
-            );
 
             let mut proxy_opts = ProxyOptions::new();
             proxy_opts.auto();
@@ -166,14 +152,6 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
             fetch_opts.prune(FetchPrune::On);
 
             git_remote.download(&[branch_name], Some(&mut fetch_opts))?;
-
-            try_debug!(
-                config.logs.stdout(),
-                "Updating tips";
-                "remote" => remote,
-                "repository" => repo_name,
-                "branch" => branch_name
-            );
 
             let update_output: CallbackOutput = Default::default();
             let mut update_callbacks = callbacks::get_default(update_output)?;
@@ -192,30 +170,12 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
                 remote_name
             })
             .map(|remote_name| {
-                try_debug!(
-                    config.logs().stdout(),
-                    "Looking up OID";
-                    "remote" => &remote_name,
-                    "repository" => repo_name,
-                    "branch" => branch_name
-                );
                 (
                     remote_name.clone(),
                     get_oid_by_spec(&repo, &remote_name).expect(""),
                 )
             })
             .collect::<HashMap<String, Oid>>();
-
-        for (remote_name, remote_oid) in &remote_oids {
-            try_debug!(
-                config.logs().stdout(),
-                "Remote OID";
-                "remote_name" => remote_name,
-                "oid" => format!("{}", remote_oid),
-                "repository" => repo_name,
-                "branch" => branch_name
-            );
-        }
 
         let mut messages = BTreeMap::new();
         let mut branch: Branch = Default::default();
@@ -231,41 +191,55 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
 
             let (ahead, behind) = repo.graph_ahead_behind(*local_oid, *remote_oid)?;
 
-            let mut message = String::new();
-
             if ahead > 0 || behind > 0 {
-                if ahead > 0 {
-                    message = format!(
+                let mut message = if ahead > 0 {
+                    msg_clone.set_category(Category::Ahead);
+                    format!(
                         "{}{}{}{}{}",
                         "Your branch is ahead of '".green(),
                         remote_name.green(),
                         "' by ".green(),
                         ahead.to_string().green(),
                         " commit(s)".green()
-                    );
-                }
+                    )
+                } else {
+                    String::new()
+                };
 
-                if behind > 0 {
-                    message = format!(
+                message = if behind > 0 {
+                    msg_clone.set_category(Category::Behind);
+                    format!(
                         "{}{}{}{}{}",
                         "Your branch is behind '".green(),
                         remote_name.green(),
                         "' by ".green(),
                         behind.to_string().green(),
                         " commit(s)".green()
-                    );
-                }
+                    )
+                } else {
+                    message
+                };
+
+                try_info!(
+                    config.logs().stdout(),
+                    "{}",
+                    message;
+                    "repository" => repo_name,
+                    "branch" => branch_name
+                );
+                remote_messages.insert(remote, message);
             } else {
-                message = format!("Your branch is up to date with '{}'", remote_name);
+                msg_clone.set_category(Category::UpToDate);
+                let message = format!("Your branch is up to date with '{}'", remote_name);
+                try_trace!(
+                    config.logs().stdout(),
+                    "{}",
+                    message;
+                    "repository" => repo_name,
+                    "branch" => branch_name
+                );
+                remote_messages.insert(remote, message);
             }
-            try_info!(
-                config.logs().stdout(),
-                "{}",
-                message;
-                "repository" => repo_name,
-                "branch" => branch_name
-            );
-            remote_messages.insert(remote, message);
         }
 
         messages.insert(branch, remote_messages);

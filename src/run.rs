@@ -88,6 +88,7 @@ pub fn run() -> Result<i32> {
     let thread_logs = logs.clone();
     let receiver_logs = logs.clone();
     let config_logs = logs.clone();
+    let core_logs = logs.clone();
 
     try_trace!(logs.stdout(), "Logging configured!");
 
@@ -116,7 +117,7 @@ pub fn run() -> Result<i32> {
     let srv_cons = Rc::clone(&connections);
 
     let srv = socket.incoming().for_each(move |(stream, addr)| {
-        try_info!(server_logs.stdout(), "Connection opened"; "addr" => format!("{}", addr));
+        try_trace!(server_logs.stdout(), "Connection opened"; "addr" => format!("{}", addr));
         // We currently don't accept input from the clients, so only grabbing the writer.
         let (_r, writer) = stream.split();
 
@@ -142,7 +143,7 @@ pub fn run() -> Result<i32> {
         let connections = Rc::clone(&srv_cons);
         let spawn_logs = server_logs.clone();
         handle.spawn(socket_writer.then(move |_| {
-            try_info!(spawn_logs.stdout(), "Closing connection"; "addr" => format!("{}", addr));
+            try_trace!(spawn_logs.stdout(), "Closing connection"; "addr" => format!("{}", addr));
             connections.borrow_mut().remove(&addr);
             Ok(())
         }));
@@ -204,6 +205,7 @@ pub fn run() -> Result<i32> {
     // Join the server and monitor futures.
     let both = rx_fut.join(srv);
 
+    try_info!(core_logs.stdout(), "Starting repomons...");
     // Run the monitors and the server.
     core.run(both).expect("Failed to run event loop");
 
