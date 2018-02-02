@@ -152,12 +152,21 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
             fetch_opts.prune(FetchPrune::On);
 
             let mut valid_branchname = false;
-            for refspec in git_remote.refspecs() {
-                if let Some(name) = refspec.str() {
-                    if name == branch_name {
-                        valid_branchname = true;
-                        break;
-                    }
+            for remote_head in git_remote.list()? {
+                let rh_name = remote_head.name();
+                let mut remote_branch_name = String::from("refs/heads/");
+                remote_branch_name.push_str(branch_name);
+
+                if rh_name == remote_branch_name {
+                    try_trace!(
+                        config.logs.stdout(),
+                        "Found matching remote branch";
+                        "remote_ref" => rh_name,
+                        "branch" => branch_name,
+                        "repo" => repo_name
+                    );
+                    valid_branchname = true;
+                    break;
                 }
             }
 

@@ -22,7 +22,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-profile.git"
 
 [[repos.msl-profile.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
@@ -321,7 +321,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-community-rewards.git"
 
 [[repos.msl-community-rewards.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
@@ -334,7 +334,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-shopping-list.git"
 
 [[repos.msl-shopping-list.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
