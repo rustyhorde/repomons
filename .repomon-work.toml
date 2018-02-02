@@ -1,8 +1,8 @@
 basedir = "/Users/kon8116/projects/kroger"
 
-#####
+##################################################
 # msl-checkout
-#####
+##################################################
 
 [[repos.msl-checkout.remotes]]
 name = "origin"

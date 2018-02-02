@@ -1,6 +1,19 @@
 basedir = "/home/jozias/projects/repomon"
 
 ##################################################
+# aoc
+##################################################
+
+[[repos.aoc.remotes]]
+name = "origin"
+url = "git@github.com:CraZySacX/aoc.git"
+
+[[repos.aoc.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin"]
+
+##################################################
 # ar2
 ##################################################
 
@@ -14,14 +27,190 @@ interval = "1h"
 remotes = ["origin"]
 
 ##################################################
-# aoc
+# atlas-api
 ##################################################
 
-[[repos.aoc.remotes]]
+[[repos.atlas-api.remotes]]
 name = "origin"
-url = "git@github.com:CraZySacX/aoc.git"
+url = "jozias@jasonozias.com:repos/atlas-api.git"
 
-[[repos.aoc.branch]]
+[[repos.atlas-api.remotes]]
+name = "gh"
+url = "git@github.com:rustyhorde/atlas-api.git"
+
+[[repos.atlas-api.remotes]]
+name = "bb"
+url = "git@bitbucket.org:rustyhorde/atlas-api.git"
+
+[[repos.atlas-api.remotes]]
+name = "gl"
+url = "git@gitlab.com:rustyhorde/atlas-api.git"
+
+[[repos.atlas-api.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# baldr
+##################################################
+
+[[repos.baldr.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/baldr.git"
+
+[[repos.baldr.remotes]]
+name = "gh"
+url = "git@github.com:aesir-vanir/baldr.git"
+
+[[repos.baldr.remotes]]
+name = "bb"
+url = "git@bitbucket.org:aesir-vanir/baldr.git"
+
+[[repos.baldr.remotes]]
+name = "gl"
+url = "git@gitlab.com:aesir-vanir/baldr.git"
+
+[[repos.baldr.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# cargo-cli
+##################################################
+
+[[repos.cargo-cli.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/cargo-cli.git"
+
+[[repos.cargo-cli.remotes]]
+name = "gh"
+url = "git@github.com:rustyhorde/cargo-cli.git"
+
+[[repos.cargo-cli.remotes]]
+name = "bb"
+url = "git@bitbucket.org:rustyhorde/cargo-cli.git"
+
+[[repos.cargo-cli.remotes]]
+name = "gl"
+url = "git@gitlab.com:rustyhorde/cargo-cli.git"
+
+[[repos.cargo-cli.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# cargo-tyr
+##################################################
+
+[[repos.cargo-tyr.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/cargo-tyr.git"
+
+[[repos.cargo-tyr.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin"]
+
+##################################################
+# jsonwebtoken
+##################################################
+
+[[repos.jsonwebtoken.remotes]]
+name = "origin"
+url = "git@github.com:rustyhorde/jsonwebtoken.git"
+
+[[repos.jsonwebtoken.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin"]
+
+##################################################
+# libtyr
+##################################################
+
+[[repos.libtyr.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/libtyr.git"
+
+[[repos.libtyr.remotes]]
+name = "gh"
+url = "git@github.com:aesir-vanir/libtyr.git"
+
+[[repos.libtyr.remotes]]
+name = "bb"
+url = "git@bitbucket.org:aesir-vanir/libtyr.git"
+
+[[repos.libtyr.remotes]]
+name = "gl"
+url = "git@gitlab.com:aesir-vanir/libtyr.git"
+
+[[repos.libtyr.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# mimir
+##################################################
+
+[[repos.mimir.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/mimir.git"
+
+[[repos.mimir.remotes]]
+name = "gh"
+url = "git@github.com:aesir-vanir/mimir.git"
+
+[[repos.mimir.remotes]]
+name = "bb"
+url = "git@bitbucket.org:aesir-vanir/mimir.git"
+
+[[repos.mimir.remotes]]
+name = "gl"
+url = "git@gitlab.com:aesir-vanir/mimir.git"
+
+[[repos.mimir.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# mussh
+##################################################
+
+[[repos.mussh.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/mussh.git"
+
+[[repos.mussh.remotes]]
+name = "gh"
+url = "git@github.com:rustyhorde/mussh.git"
+
+[[repos.mussh.remotes]]
+name = "bb"
+url = "git@bitbucket.org:rustyhorde/mussh.git"
+
+[[repos.mussh.remotes]]
+name = "gl"
+url = "git@gitlab.com:rustyhorde/mussh.git"
+
+[[repos.mussh.branch]]
+name = "master"
+interval = "5m"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# oic-bindgen
+##################################################
+
+[[repos.oic-bindgen.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/oic-bindgen.git"
+
+[[repos.oic-bindgen.branch]]
 name = "master"
 interval = "1h"
 remotes = ["origin"]
@@ -125,3 +314,143 @@ url = "git@gitlab.com:rustyhorde/rsjni.git"
 name = "master"
 interval = "5m"
 remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# rsjni-bindgen
+##################################################
+
+[[repos.rsjni-bindgen.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/rsjni-bindgen.git"
+
+[[repos.rsjni-bindgen.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin"]
+
+##################################################
+# rsjni-jdbc
+##################################################
+
+[[repos.rsjni-jdbc.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/rsjni-jdbc.git"
+
+[[repos.rsjni-jdbc.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin"]
+
+##################################################
+# slog-try
+##################################################
+
+[[repos.slog-try.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/slog-try.git"
+
+[[repos.slog-try.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin"]
+
+##################################################
+# swenv
+##################################################
+
+[[repos.swenv.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/swenv.git"
+
+[[repos.swenv.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin"]
+
+##################################################
+# tyr
+##################################################
+
+[[repos.tyr.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/tyr.git"
+
+[[repos.tyr.remotes]]
+name = "gh"
+url = "git@github.com:aesir-vanir/tyr.git"
+
+[[repos.tyr.remotes]]
+name = "bb"
+url = "git@bitbucket.org:aesir-vanir/tyr.git"
+
+[[repos.tyr.remotes]]
+name = "gl"
+url = "git@gitlab.com:aesir-vanir/tyr.git"
+
+[[repos.tyr.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# valkyrie
+##################################################
+
+[[repos.valkyrie.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/valkyrie.git"
+
+[[repos.valkyrie.remotes]]
+name = "gh"
+url = "git@github.com:aesir-vanir/valkyrie.git"
+
+[[repos.valkyrie.remotes]]
+name = "bb"
+url = "git@bitbucket.org:aesir-vanir/valkyrie.git"
+
+[[repos.valkyrie.remotes]]
+name = "gl"
+url = "git@gitlab.com:aesir-vanir/valkyrie.git"
+
+[[repos.valkyrie.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# vidar
+##################################################
+
+[[repos.vidar.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/vidar.git"
+
+[[repos.vidar.remotes]]
+name = "gh"
+url = "git@github.com:aesir-vanir/vidar.git"
+
+[[repos.vidar.remotes]]
+name = "bb"
+url = "git@bitbucket.org:aesir-vanir/vidar.git"
+
+[[repos.vidar.remotes]]
+name = "gl"
+url = "git@gitlab.com:aesir-vanir/vidar.git"
+
+[[repos.vidar.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# vum
+##################################################
+
+[[repos.vum.remotes]]
+name = "origin"
+url = "jozias@jasonozias.com:repos/vum.git"
+
+[[repos.vum.branch]]
+name = "master"
+interval = "1h"
+remotes = ["origin"]
