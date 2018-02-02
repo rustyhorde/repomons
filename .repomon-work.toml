@@ -13,11 +13,6 @@ name = "master"
 interval = "1h"
 remotes = ["origin"]
 
-[[repos.msl-checkout.branch]]
-name = "dev"
-interval = "15m"
-remotes = ["origin"]
-
 #####
 # msl-profile
 #####
@@ -110,14 +105,14 @@ interval = "15m"
 remotes = ["origin"]
 
 #####
-# test-data-producer
+# optup-receipt-test-data-producer
 #####
 
-[[repos.test-data-producer.remotes]]
+[[repos.optup-receipt-test-data-producer.remotes]]
 name = "origin"
-url = "git@gitlab.kroger.com:msl/test-data-producer.git"
+url = "git@gitlab.kroger.com:msl/optup-receipt-test-data-producer.git"
 
-[[repos.test-data-producer.branch]]
+[[repos.optup-receipt-test-data-producer.branch]]
 name = "master"
 interval = "15m"
 remotes = ["origin"]
@@ -261,7 +256,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-store-locator.git"
 
 [[repos.msl-store-locator.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
