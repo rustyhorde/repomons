@@ -151,11 +151,36 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
             fetch_opts.proxy_options(proxy_opts);
             fetch_opts.prune(FetchPrune::On);
 
-            git_remote.download(&[branch_name], Some(&mut fetch_opts))?;
+            let mut valid_branchname = false;
+            for refspec in git_remote.refspecs() {
+                if let Some(name) = refspec.str() {
+                    if name == branch_name {
+                        valid_branchname = true;
+                        break;
+                    }
+                }
+            }
 
-            let update_output: CallbackOutput = Default::default();
-            let mut update_callbacks = callbacks::get_default(update_output)?;
-            git_remote.update_tips(Some(&mut update_callbacks), true, AutotagOption::Auto, None)?;
+            if valid_branchname {
+                git_remote.download(&[branch_name], Some(&mut fetch_opts))?;
+
+                let update_output: CallbackOutput = Default::default();
+                let mut update_callbacks = callbacks::get_default(update_output)?;
+                git_remote.update_tips(
+                    Some(&mut update_callbacks),
+                    true,
+                    AutotagOption::Auto,
+                    None,
+                )?;
+            } else {
+                try_error!(
+                    config.logs().stderr(),
+                    "Invalid branch";
+                    "repository" => repo_name,
+                    "branch" => branch_name
+                );
+                return Err(format!("invalid branch: {}", branch_name).into());
+            }
         }
 
         let local_branch_oid = vec![get_oid_by_spec(&repo, branch_name)?];
