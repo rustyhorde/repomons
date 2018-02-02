@@ -1,5 +1,9 @@
 basedir = "/home/jozias/projects/repomon"
 
+##################################################
+# ar2
+##################################################
+
 [[repos.ar2.remotes]]
 name = "origin"
 url = "jozias@jasonozias.com:repos/ar2.git"
@@ -9,14 +13,22 @@ name = "master"
 interval = "1h"
 remotes = ["origin"]
 
-[[repos.node.remotes]]
-name = "origin"
-url = "git@github.com:nodejs/node.git"
+##################################################
+# aoc
+##################################################
 
-[[repos.node.branch]]
+[[repos.aoc.remotes]]
+name = "origin"
+url = "git@github.com:CraZySacX/aoc.git"
+
+[[repos.aoc.branch]]
 name = "master"
-interval = "15m"
+interval = "1h"
 remotes = ["origin"]
+
+##################################################
+# repomon
+##################################################
 
 [[repos.repomon.remotes]]
 name = "origin"
@@ -39,6 +51,10 @@ name = "master"
 interval = "5m"
 remotes = ["origin", "gh", "bb", "gl"]
 
+##################################################
+# repomons
+##################################################
+
 [[repos.repomons.remotes]]
 name = "origin"
 url = "jozias@jasonozias.com:repos/repomons.git"
@@ -60,6 +76,10 @@ name = "master"
 interval = "5m"
 remotes = ["origin", "gh", "bb", "gl"]
 
+##################################################
+# repomonc
+##################################################
+
 [[repos.repomonc.remotes]]
 name = "origin"
 url = "jozias@jasonozias.com:repos/repomonc.git"
@@ -80,6 +100,10 @@ url = "git@gitlab.com:rustyhorde/repomonc.git"
 name = "master"
 interval = "5m"
 remotes = ["origin", "gh", "bb", "gl"]
+
+##################################################
+# rsjni
+##################################################
 
 [[repos.rsjni.remotes]]
 name = "origin"
