@@ -126,7 +126,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-rx.git"
 
 [[repos.msl-rx.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
