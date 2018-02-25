@@ -178,7 +178,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-communications.git"
 
 [[repos.msl-communications.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
