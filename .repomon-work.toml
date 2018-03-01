@@ -48,7 +48,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/message-center.git"
 
 [[repos.message-center.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
