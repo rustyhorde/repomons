@@ -35,7 +35,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-wellness.git"
 
 [[repos.msl-wellness.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
