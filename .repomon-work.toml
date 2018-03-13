@@ -204,7 +204,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-order-history.git"
 
 [[repos.msl-order-history.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
