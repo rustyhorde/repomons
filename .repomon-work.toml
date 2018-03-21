@@ -61,7 +61,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-bootstrap.git"
 
 [[repos.msl-bootstrap.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
@@ -139,7 +139,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-coupons.git"
 
 [[repos.msl-coupons.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
@@ -243,7 +243,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-weekly-ads.git"
 
 [[repos.msl-weekly-ads.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
@@ -295,7 +295,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-giftcards.git"
 
 [[repos.msl-giftcards.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
