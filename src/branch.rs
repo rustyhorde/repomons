@@ -22,7 +22,6 @@ use rand::distributions::{IndependentSample, Range};
 use repo::{self, Config};
 use repomon::{Branch, Category, Message, Remote};
 use std::collections::{BTreeMap, HashMap};
-use std::convert::TryFrom;
 use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -102,7 +101,7 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     // at the same time.
     let mut rng = rand::thread_rng();
     let between = Range::new(0, (interval * 4) / 5);
-    let rand_delay: u64 = TryFrom::try_from(between.ind_sample(&mut rng))?;
+    let rand_delay: u64 = between.ind_sample(&mut rng) as u64;
     try_trace!(
         config.logs().stdout(),
         "Delaying monitor start";
@@ -302,7 +301,7 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
         );
 
         // Sleep until the interval has passed.
-        let int: u64 = TryFrom::try_from(interval)?;
+        let int: u64 = interval as u64;
         try_trace!(config.logs().stdout(), "Sleeping"; "interval" => int, "repository" => repo_name, "branch" => branch_name);
         thread::sleep(Duration::from_millis(int));
     }
@@ -318,43 +317,43 @@ pub fn get_oid_by_spec(repo: &Repository, spec: &str) -> Result<Oid> {
 fn status_out(status: &Status, out: &mut String) -> Result<()> {
     let mut statuses = Vec::new();
 
-    if status.contains(git2::STATUS_INDEX_NEW) {
+    if status.contains(git2::Status::INDEX_NEW) {
         statuses.push("idx-new");
     }
 
-    if status.contains(git2::STATUS_INDEX_MODIFIED) {
+    if status.contains(git2::Status::INDEX_MODIFIED) {
         statuses.push("idx-modified");
     }
 
-    if status.contains(git2::STATUS_INDEX_DELETED) {
+    if status.contains(git2::Status::INDEX_DELETED) {
         statuses.push("idx-deleted");
     }
 
-    if status.contains(git2::STATUS_INDEX_TYPECHANGE) {
+    if status.contains(git2::Status::INDEX_TYPECHANGE) {
         statuses.push("idx-typechange");
     }
 
-    if status.contains(git2::STATUS_INDEX_RENAMED) {
+    if status.contains(git2::Status::INDEX_RENAMED) {
         statuses.push("idx-renamed");
     }
 
-    if status.contains(git2::STATUS_WT_NEW) {
+    if status.contains(git2::Status::WT_NEW) {
         statuses.push("wt-new");
     }
 
-    if status.contains(git2::STATUS_WT_MODIFIED) {
+    if status.contains(git2::Status::WT_MODIFIED) {
         statuses.push("wt-modified");
     }
 
-    if status.contains(git2::STATUS_WT_DELETED) {
+    if status.contains(git2::Status::WT_DELETED) {
         statuses.push("wt-deleted");
     }
 
-    if status.contains(git2::STATUS_WT_TYPECHANGE) {
+    if status.contains(git2::Status::WT_TYPECHANGE) {
         statuses.push("wt-typechange");
     }
 
-    if status.contains(git2::STATUS_WT_RENAMED) {
+    if status.contains(git2::Status::WT_RENAMED) {
         statuses.push("wt-renamed");
     }
 
@@ -362,11 +361,11 @@ fn status_out(status: &Status, out: &mut String) -> Result<()> {
     //     statuses.push("wt-unreadable");
     // }
 
-    if status.contains(git2::STATUS_IGNORED) {
+    if status.contains(git2::Status::IGNORED) {
         statuses.push("ignored");
     }
 
-    if status.contains(git2::STATUS_CONFLICTED) {
+    if status.contains(git2::Status::CONFLICTED) {
         statuses.push("conflicted");
     }
 

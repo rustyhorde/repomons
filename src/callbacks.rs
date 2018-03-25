@@ -59,14 +59,14 @@ pub fn check_creds(
     username: Option<&str>,
     cred_type: CredentialType,
 ) -> ::std::result::Result<Cred, git2::Error> {
-    if cred_type.contains(git2::SSH_KEY) {
+    if cred_type.contains(git2::CredentialType::SSH_KEY) {
         match Cred::ssh_key_from_agent(username.unwrap_or("")) {
             Ok(cred) => return Ok(cred),
             Err(_e) => {}
         }
     }
 
-    if cred_type.contains(git2::USER_PASS_PLAINTEXT) {
+    if cred_type.contains(git2::CredentialType::USER_PASS_PLAINTEXT) {
         if let Ok(config) = Config::open_default() {
             match Cred::credential_helper(&config, url, username) {
                 Ok(cred) => return Ok(cred),

@@ -11,7 +11,6 @@ error_chain!{
     foreign_links {
         AddrParse(::std::net::AddrParseError);
         Git2(::git2::Error);
-        Infallible(::std::convert::Infallible);
         Io(::std::io::Error);
         Repomon(::repomon::Error);
         TryFromInt(::std::num::TryFromIntError);
