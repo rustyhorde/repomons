@@ -19,8 +19,8 @@ use git2::{self, AutotagOption, Direction, FetchOptions, FetchPrune, Oid, ProxyO
 use log::Logs;
 use rand;
 use rand::distributions::{IndependentSample, Range};
-use repomon::{Branch, Category, Message, Remote};
 use repo::{self, Config};
+use repomon::{Branch, Category, Message, Remote};
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
 use std::path::PathBuf;

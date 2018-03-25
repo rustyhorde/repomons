@@ -9,8 +9,8 @@
 //! `repomon` repository operations.
 use callbacks::{self, CallbackOutput};
 use error::Result;
-use git2::{FetchOptions, ProxyOptions, Repository};
 use git2::build::RepoBuilder;
+use git2::{FetchOptions, ProxyOptions, Repository};
 use repomon::Remote;
 use std::env;
 use std::fs;

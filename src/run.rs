@@ -10,8 +10,8 @@
 use branch::{self, MonitorConfig};
 use clap::{App, Arg};
 use error::Result;
-use futures::{Future, Stream};
 use futures::sync::mpsc;
+use futures::{Future, Stream};
 use log::Logs;
 use repomon;
 use slog::Level;
