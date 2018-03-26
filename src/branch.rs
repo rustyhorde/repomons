@@ -69,9 +69,9 @@ impl MonitorConfig {
     ) -> Self {
         Self {
             basedir: basedir.to_string(),
-            tx: tx,
-            logs: logs,
-            remote_handle: remote_handle,
+            tx,
+            logs,
+            remote_handle,
             repo_name: Default::default(),
             branch: Default::default(),
             remotes: Default::default(),
