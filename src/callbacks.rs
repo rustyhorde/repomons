@@ -87,10 +87,11 @@ pub fn sideband(output: &mut CallbackOutput, text: &[u8]) -> bool {
 }
 
 /// Generate a percent string from a numerator and denominator.
+#[cfg_attr(feature = "cargo-clippy", allow(cast_possible_truncation))]
 fn to_percent(num_pre: usize, dem_pre: usize) -> Result<String> {
     if dem_pre > 0 {
-        let num_inter: u32 = TryFrom::try_from(num_pre)?;
-        let dem_inter: u32 = TryFrom::try_from(dem_pre)?;
+        let num_inter: u32 = num_pre as u32;
+        let dem_inter: u32 = dem_pre as u32;
         let numerator: f64 = num_inter.into();
         let denominator: f64 = dem_inter.into();
         let result = (numerator / denominator) * 100.;
@@ -153,10 +154,11 @@ fn bytes_to_max_units(bytes_pre: usize) -> Result<(ByteUnits, usize, usize)> {
 }
 
 /// Convert the bytes value to a properly unit-ed string.
+#[cfg_attr(feature = "cargo-clippy", allow(cast_possible_truncation))]
 fn bytes_to_string(bytes_pre: usize) -> Result<String> {
     let (units, curr_bytes, rem_pre) = bytes_to_max_units(bytes_pre)?;
-    let bytes = f64::from(u32::try_from(curr_bytes)?);
-    let rem = f64::from(u32::try_from(rem_pre)?) / 1024.;
+    let bytes = f64::from(curr_bytes as u32);
+    let rem = f64::from(rem_pre as u32) / 1024.;
     let two_decimal_down = (100. * (bytes + rem)).floor() / 100.;
 
     Ok(match units {
@@ -171,11 +173,12 @@ fn bytes_to_string(bytes_pre: usize) -> Result<String> {
 }
 
 /// Convert the current bytes to a rate, given the start time.
+#[cfg_attr(feature = "cargo-clippy", allow(cast_possible_truncation))]
 fn bytes_to_rate(bytes_pre: usize, start: &Instant) -> Result<String> {
     let elapsed = start.elapsed();
     let seconds =
         f64::from(u32::try_from(elapsed.as_secs())?) + f64::from(elapsed.subsec_nanos()) * 1e-9;
-    let bytes = f64::from(u32::try_from(bytes_pre)?);
+    let bytes = f64::from(bytes_pre as u32);
     let mut bytes_per_second = bytes / seconds;
     let mut unit_idx = 0;
     while bytes_per_second >= 1024. {
