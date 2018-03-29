@@ -7,7 +7,7 @@
 // modified, or distributed except according to those terms.
 
 //! `repomons` 0.1.0
-#![feature(duration_extras, match_default_bindings, try_from)]
+#![feature(duration_extras, try_from)]
 #![deny(missing_docs)]
 
 #[macro_use]
