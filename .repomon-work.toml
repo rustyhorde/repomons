@@ -74,7 +74,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-product-catalog.git"
 
 [[repos.msl-product-catalog.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
