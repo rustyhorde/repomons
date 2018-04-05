@@ -454,6 +454,6 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/utilities/msl-ecsb-config-template.git"
 
 [[repos.'utilities/msl-ecsb-config-template'.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
