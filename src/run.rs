@@ -24,8 +24,8 @@ use std::rc::Rc;
 use std::thread;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
-use tokio_io::AsyncRead;
 use tokio_io::io::write_all;
+use tokio_io::AsyncRead;
 
 /// CLI Runtime
 pub fn run() -> Result<i32> {
