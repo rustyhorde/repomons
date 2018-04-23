@@ -308,7 +308,7 @@ name = "origin"
 url = "git@gitlab.kroger.com:msl/msl-fulfillment.git"
 
 [[repos.msl-fulfillment.branch]]
-name = "dev"
+name = "master"
 interval = "15m"
 remotes = ["origin"]
 
