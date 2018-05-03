@@ -14,8 +14,9 @@ use error::Result;
 use futures::future::result;
 use futures::sync::mpsc;
 use futures::{Future, Sink};
-use git2::{self, AutotagOption, Direction, FetchOptions, FetchPrune, Oid, ProxyOptions,
-           Repository, Status};
+use git2::{
+    self, AutotagOption, Direction, FetchOptions, FetchPrune, Oid, ProxyOptions, Repository, Status,
+};
 use log::Logs;
 use rand;
 use rand::distributions::{IndependentSample, Range};
