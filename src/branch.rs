@@ -202,14 +202,12 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
                 remote_name.push('/');
                 remote_name.push_str(branch_name);
                 remote_name
-            })
-            .map(|remote_name| {
+            }).map(|remote_name| {
                 (
                     remote_name.clone(),
                     get_oid_by_spec(&repo, &remote_name).expect(""),
                 )
-            })
-            .collect::<HashMap<String, Oid>>();
+            }).collect::<HashMap<String, Oid>>();
 
         let mut messages = BTreeMap::new();
         let mut branch: Branch = Default::default();

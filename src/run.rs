@@ -40,30 +40,26 @@ pub fn run() -> Result<i32> {
                 .takes_value(true)
                 .required(true)
                 .default_value(".repomon.toml"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("address")
                 .short("a")
                 .long("address")
                 .takes_value(true)
                 .required(true)
                 .default_value("127.0.0.1:8080"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("verbose")
                 .short("v")
                 .multiple(true)
                 .help("Set the output verbosity level (more v's = more verbose)"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("quiet")
                 .short("q")
                 .long("quiet")
                 .multiple(true)
                 .conflicts_with("verbose")
                 .help("Restrict output.  (more q's = more quiet"),
-        )
-        .arg(Arg::with_name("repo").default_value("."))
+        ).arg(Arg::with_name("repo").default_value("."))
         .get_matches();
 
     // Setup the logging (info by default)
