@@ -18,8 +18,7 @@ use git2::{
     self, AutotagOption, Direction, FetchOptions, FetchPrune, Oid, ProxyOptions, Repository, Status,
 };
 use log::Logs;
-use rand;
-use rand::distributions::{IndependentSample, Range};
+use rand::{self, Rng};
 use repo::{self, Config};
 use repomon::{Branch, Category, Message, Remote};
 use std::collections::{BTreeMap, HashMap};
@@ -101,8 +100,7 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     // Delay start up to 80% to avoid running all the same intervals
     // at the same time.
     let mut rng = rand::thread_rng();
-    let between = Range::new(0, (interval * 4) / 5);
-    let rand_delay: u64 = between.ind_sample(&mut rng) as u64;
+    let rand_delay = rng.gen_range(0, (interval * 4) / 5) as u64;
     try_trace!(
         config.logs().stdout(),
         "Delaying monitor start";
@@ -315,7 +313,7 @@ pub fn get_oid_by_spec(repo: &Repository, spec: &str) -> Result<Oid> {
 
 /// Convert a status to a composite string.
 #[allow(dead_code)]
-fn status_out(status: &Status, out: &mut String) -> Result<()> {
+fn status_out(status: Status, out: &mut String) -> Result<()> {
     let mut statuses = Vec::new();
 
     if status.contains(git2::Status::INDEX_NEW) {

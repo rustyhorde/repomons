@@ -87,7 +87,6 @@ pub fn sideband(output: &mut CallbackOutput, text: &[u8]) -> bool {
 }
 
 /// Generate a percent string from a numerator and denominator.
-#[cfg_attr(feature = "cargo-clippy", allow(cast_possible_truncation))]
 fn to_percent(num_pre: usize, dem_pre: usize) -> Result<String> {
     if dem_pre > 0 {
         let num_inter: u32 = num_pre as u32;
@@ -154,7 +153,6 @@ fn bytes_to_max_units(bytes_pre: usize) -> Result<(ByteUnits, usize, usize)> {
 }
 
 /// Convert the bytes value to a properly unit-ed string.
-#[cfg_attr(feature = "cargo-clippy", allow(cast_possible_truncation))]
 fn bytes_to_string(bytes_pre: usize) -> Result<String> {
     let (units, curr_bytes, rem_pre) = bytes_to_max_units(bytes_pre)?;
     let bytes = f64::from(curr_bytes as u32);
@@ -173,7 +171,6 @@ fn bytes_to_string(bytes_pre: usize) -> Result<String> {
 }
 
 /// Convert the current bytes to a rate, given the start time.
-#[cfg_attr(feature = "cargo-clippy", allow(cast_possible_truncation))]
 fn bytes_to_rate(bytes_pre: usize, start: &Instant) -> Result<String> {
     let elapsed = start.elapsed();
     let seconds =
@@ -203,8 +200,7 @@ fn bytes_to_rate(bytes_pre: usize, start: &Instant) -> Result<String> {
 }
 
 /// Progress remote callback.
-#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-pub fn progress(output: &mut CallbackOutput, progress: Progress) -> bool {
+pub fn progress(output: &mut CallbackOutput, progress: &Progress) -> bool {
     let received_objects = progress.received_objects();
     let total_objects = progress.total_objects();
 
@@ -272,7 +268,7 @@ pub fn get_default<'a>(output: CallbackOutput) -> Result<RemoteCallbacks<'a>> {
     let mut t = term::stdout().ok_or("unable to create stdout term")?;
 
     let progress_fn = move |progress_info: Progress| -> bool {
-        let res = progress(&mut progress_state.borrow_mut(), progress_info);
+        let res = progress(&mut progress_state.borrow_mut(), &progress_info);
         let curr_state = progress_state.borrow();
 
         if !curr_state.progress.is_empty() {
@@ -322,29 +318,35 @@ mod test {
         assert_eq!(super::bytes_to_string(512).expect(""), "512 B");
         assert_eq!(super::bytes_to_string(1023).expect(""), "1023 B");
         assert_eq!(super::bytes_to_string(1024).expect(""), "1.00 KiB");
-        assert_eq!(super::bytes_to_string(1048575).expect(""), "1023.99 KiB");
-        assert_eq!(super::bytes_to_string(1048576).expect(""), "1.00 MiB");
-        assert_eq!(super::bytes_to_string(1073741823).expect(""), "1023.99 MiB");
-        assert_eq!(super::bytes_to_string(1073741824).expect(""), "1.00 GiB");
+        assert_eq!(super::bytes_to_string(1_048_575).expect(""), "1023.99 KiB");
+        assert_eq!(super::bytes_to_string(1_048_576).expect(""), "1.00 MiB");
         assert_eq!(
-            super::bytes_to_string(1099511627775).expect(""),
+            super::bytes_to_string(1_073_741_823).expect(""),
+            "1023.99 MiB"
+        );
+        assert_eq!(super::bytes_to_string(1_073_741_824).expect(""), "1.00 GiB");
+        assert_eq!(
+            super::bytes_to_string(1_099_511_627_775).expect(""),
             "1023.99 GiB"
         );
-        assert_eq!(super::bytes_to_string(1099511627776).expect(""), "1.00 TiB");
         assert_eq!(
-            super::bytes_to_string(1125899906842623).expect(""),
+            super::bytes_to_string(1_099_511_627_776).expect(""),
+            "1.00 TiB"
+        );
+        assert_eq!(
+            super::bytes_to_string(1_125_899_906_842_623).expect(""),
             "1023.99 TiB"
         );
         assert_eq!(
-            super::bytes_to_string(1125899906842624).expect(""),
+            super::bytes_to_string(1_125_899_906_842_624).expect(""),
             "1.00 PiB"
         );
         assert_eq!(
-            super::bytes_to_string(1152921504606846975).expect(""),
+            super::bytes_to_string(1_152_921_504_606_846_975).expect(""),
             "1023.99 PiB"
         );
         assert_eq!(
-            super::bytes_to_string(1152921504606846976).expect(""),
+            super::bytes_to_string(1_152_921_504_606_846_976).expect(""),
             "1.00 EiB"
         );
         assert_eq!(
