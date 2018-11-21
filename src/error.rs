@@ -7,7 +7,7 @@
 // modified, or distributed except according to those terms.
 
 //! `repomon` errors
-error_chain!{
+error_chain! {
     foreign_links {
         AddrParse(::std::net::AddrParseError);
         Git2(::git2::Error);
