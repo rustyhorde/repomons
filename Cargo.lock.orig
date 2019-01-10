@@ -144,7 +144,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "crossbeam-utils 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+<<<<<<< HEAD
+ "rand 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+=======
  "rand 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
+>>>>>>> gh/master
  "smallvec 0.6.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -486,7 +490,11 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.46 (registry+https://github.com/rust-lang/crates.io-index)",
+<<<<<<< HEAD
+ "rand 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+=======
  "rand 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
+>>>>>>> gh/master
  "rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 0.6.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -536,7 +544,7 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.4.5"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "fuchsia-zircon 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -548,7 +556,11 @@ dependencies = [
 
 [[package]]
 name = "rand"
+<<<<<<< HEAD
+version = "0.6.3"
+=======
 version = "0.6.4"
+>>>>>>> gh/master
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "autocfg 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1015,7 +1027,11 @@ dependencies = [
  "futures 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "num_cpus 1.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+<<<<<<< HEAD
+ "rand 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+=======
  "rand 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
+>>>>>>> gh/master
  "tokio-executor 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1126,7 +1142,7 @@ version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.84 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha1 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1252,8 +1268,12 @@ dependencies = [
 "checksum proc-macro2 0.4.24 (registry+https://github.com/rust-lang/crates.io-index)" = "77619697826f31a02ae974457af0b29b723e5619e113e9397b8b82c6bd253f09"
 "checksum quote 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9949cfe66888ffe1d53e6ec9d9f3b70714083854be20fd5e271b232a017401e8"
 "checksum quote 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)" = "53fa22a1994bd0f9372d7a816207d8a2677ad0325b073f5c5332760f0fb62b5c"
-"checksum rand 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)" = "dee497e66d8d76bf08ce20c8d36e16f93749ab0bf89975b4f8ae5cee660c2da2"
+"checksum rand 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "34106854203c08f04b364c9c683bfe657e9214b082a5eda8e6c3ebfdec3ce02c"
+<<<<<<< HEAD
+"checksum rand 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "b65e163105a6284f841bd23100a015895f54340e88a5ffc9ca7b8b33827cfce0"
+=======
 "checksum rand 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)" = "3906503e80ac6cbcacb2c2973fa8e473f24d7e2747c8c92bb230c2441cad96b5"
+>>>>>>> gh/master
 "checksum rand_chacha 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "556d3a1ca6600bfcbab7c7c91ccb085ac7fbbcd70e008a98742e7847f4f7bcef"
 "checksum rand_core 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0905b6b7079ec73b314d4c748701f6931eb79fd97c668caa3f1899b22b32c6db"
 "checksum rand_hc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7b40677c7be09ae76218dc623efbf7b18e34bced3f38883af07bb75630a21bc4"
@@ -1290,7 +1310,11 @@ dependencies = [
 "checksum termion 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "689a3bdfaab439fd92bc87df5c4c78417d3cbe537487274e9b0b2dce76e92096"
 "checksum textwrap 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "307686869c93e71f94da64286f9a9524c0f308a9e1c87a583de8e9c9039ad3f6"
 "checksum thread_local 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "c6b53e329000edc2b34dbe8545fd20e55a333362d0a321909685a19bd28c3f1b"
+<<<<<<< HEAD
+"checksum time 0.1.41 (registry+https://github.com/rust-lang/crates.io-index)" = "847da467bf0db05882a9e2375934a8a55cffdc9db0d128af1518200260ba1f6c"
+=======
 "checksum time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)" = "db8dcfca086c1143c9270ac42a2bbd8a7ee477b78ac8e45b19abfb0cbede4b6f"
+>>>>>>> gh/master
 "checksum tokio 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)" = "4790d0be6f4ba6ae4f48190efa2ed7780c9e3567796abdb285003cf39840d9c5"
 "checksum tokio-codec 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5c501eceaf96f0e1793cf26beb63da3d11c738c4a943fdf3746d81d64684c39f"
 "checksum tokio-core 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)" = "aeeffbbb94209023feaef3c196a41cbcdafa06b4a6f893f68779bb5e53796f71"
