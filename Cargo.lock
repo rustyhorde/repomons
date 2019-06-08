@@ -296,7 +296,7 @@ dependencies = [
 
 [[package]]
 name = "git2"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -773,7 +773,7 @@ dependencies = [
  "error-chain 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "getset 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "git2 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "git2 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "repomon 0.1.0",
  "slog 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1343,7 +1343,7 @@ dependencies = [
 "checksum fuchsia-zircon-sys 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "3dcaa9ae7725d12cdb85b3ad99a434db70b468c09ded17e012d86b5c1010f7a7"
 "checksum futures 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)" = "1a70b146671de62ec8c8ed572219ca5d594d9b06c0b364d5e67b722fc559b48c"
 "checksum getset 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)" = "19fbde0fad0c1c1f9474694b1f5c9ba22b09f2f74f74e6d2bd19c43f6656e2cb"
-"checksum git2 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "07021feb7dd1b8696d4285dc4146ab990fd2c63daf268749796942a57fa713f7"
+"checksum git2 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "924b2e7d2986e625dcad89e8a429a7b3adee3c3d71e585f4a66c4f7e78715e31"
 "checksum idna 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "38f09e0f0b1fb55fdee1f17470ad800da77af5186a1a76c026b679358b7e844e"
 "checksum iovec 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "dbe6e417e7d0975db6512b90796e8ce223145ac4e33c377e4a42882a0e88bb08"
 "checksum isatty 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)" = "e31a8281fc93ec9693494da65fbf28c0c2aa60a2eaec25dc58e2f31952e95edc"
