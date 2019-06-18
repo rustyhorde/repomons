@@ -52,8 +52,8 @@ pub fn discover_or_clone(config: &Config) -> Result<Repository> {
             let mut repo_builder = RepoBuilder::new();
 
             let mut t = term::stdout().ok_or("unable to create stdout term")?;
-            let mut clone_output: CallbackOutput = Default::default();
-            let mut remote_callbacks = callbacks::get_default(clone_output)?;
+            let clone_output: CallbackOutput = Default::default();
+            let remote_callbacks = callbacks::get_default(clone_output)?;
 
             let mut proxy_opts = ProxyOptions::new();
             proxy_opts.auto();
