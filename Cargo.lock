@@ -734,7 +734,7 @@ name = "regex-syntax"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "ucd-util 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ucd-util 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1167,7 +1167,7 @@ dependencies = [
 
 [[package]]
 name = "ucd-util"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -1419,7 +1419,7 @@ dependencies = [
 "checksum tokio-udp 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "e2a0b10e610b39c38b031a2fcab08e4b82f16ece36504988dcbd81dbba650d82"
 "checksum tokio-uds 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "5076db410d6fdc6523df7595447629099a1fdc47b3d9f896220780fa48faf798"
 "checksum toml 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)" = "ffc92d160b1eef40665be3a05630d003936a3bc7da7421277846c2613e92c71a"
-"checksum ucd-util 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "5ccdc2daea7cf8bc50cd8710d170a9d816678e54943829c5082bb1594312cf8e"
+"checksum ucd-util 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)" = "c85f514e095d348c279b1e5cd76795082cf15bd59b93207832abe0b1d8fed236"
 "checksum unicode-bidi 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "49f2bd0c6468a8230e1db229cff8029217cf623c767ea5d60bfbd42729ea54d5"
 "checksum unicode-normalization 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "5479532badd04e128284890390c1e876ef7a993d0570b3597ae43dfa1d59afa4"
 "checksum unicode-width 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "caaa9d531767d1ff2150b9332433f32a24622147e5ebb1f26409d5da67afd479"
