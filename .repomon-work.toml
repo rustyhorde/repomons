@@ -105,19 +105,6 @@ interval = "15m"
 remotes = ["origin"]
 
 #####
-# optup-receipt-test-data-producer
-#####
-
-[[repos.optup-receipt-test-data-producer.remotes]]
-name = "origin"
-url = "git@gitlab.kroger.com:msl/optup-receipt-test-data-producer.git"
-
-[[repos.optup-receipt-test-data-producer.branch]]
-name = "master"
-interval = "15m"
-remotes = ["origin"]
-
-#####
 # msl-rx
 #####
 
