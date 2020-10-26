@@ -13,6 +13,19 @@ name = "master"
 interval = "1h"
 remotes = ["origin"]
 
+##################################################
+# msl-fuel
+##################################################
+
+[[repos.msl-fuel.remotes]]
+name = "origin"
+url = "git@gitlab.kroger.com:msl/msl-fuel.git"
+
+[[repos.msl-fuel.branch]]
+name = "master"
+interval = "15m"
+remotes = ["origin"]
+
 #####
 # msl-profile
 #####
