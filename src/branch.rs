@@ -100,7 +100,7 @@ pub fn monitor(config: &MonitorConfig) -> Result<()> {
     // Delay start up to 80% to avoid running all the same intervals
     // at the same time.
     let mut rng = rand::thread_rng();
-    let rand_delay = rng.gen_range(0, (interval * 4) / 5) as u64;
+    let rand_delay = rng.gen_range(0..(interval * 4) / 5) as u64;
     try_trace!(
         config.logs().stdout(),
         "Delaying monitor start";
