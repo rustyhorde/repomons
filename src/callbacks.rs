@@ -10,6 +10,7 @@
 use error::{Error, Result};
 use git2::{self, Config, Cred, CredentialType, Progress, RemoteCallbacks};
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::rc::Rc;
 use std::time::Instant;
@@ -204,18 +205,19 @@ pub fn progress(output: &mut CallbackOutput, progress: &Progress) -> bool {
     let received_objects = progress.received_objects();
     let total_objects = progress.total_objects();
 
-    if received_objects < total_objects {
-        let received_bytes = progress.received_bytes();
-        let received_objects_percent = to_percent(received_objects, total_objects).expect("");
-        let received_bytes_str = bytes_to_string(received_bytes).expect("");
-        let rate = bytes_to_rate(received_bytes, output.start()).expect("");
+    match received_objects.cmp(&total_objects) {
+        Ordering::Less => {
+            let received_bytes = progress.received_bytes();
+            let received_objects_percent = to_percent(received_objects, total_objects).expect("");
+            let received_bytes_str = bytes_to_string(received_bytes).expect("");
+            let rate = bytes_to_rate(received_bytes, output.start()).expect("");
 
-        *output.progress_mut() = format!(
-            "Receiving Objects: {} ({}/{}), {} | {}",
-            received_objects_percent, received_objects, total_objects, received_bytes_str, rate
-        );
-    } else if received_objects == total_objects {
-        match output.state() {
+            *output.progress_mut() = format!(
+                "Receiving Objects: {} ({}/{}), {} | {}",
+                received_objects_percent, received_objects, total_objects, received_bytes_str, rate
+            );
+        }
+        Ordering::Equal => match output.state() {
             CloneState::Receiving => {
                 let received_bytes = progress.received_bytes();
                 let received_objects_percent =
@@ -253,7 +255,8 @@ pub fn progress(output: &mut CallbackOutput, progress: &Progress) -> bool {
                     ));
                 }
             }
-        }
+        },
+        Ordering::Greater => {}
     }
 
     true

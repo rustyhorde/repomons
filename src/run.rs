@@ -70,14 +70,14 @@ pub fn run() -> Result<i32> {
     let mut level = match matches.occurrences_of("verbose") {
         0 => Level::Info,
         1 => Level::Debug,
-        2 | _ => Level::Trace,
+        _ => Level::Trace,
     };
 
     level = match matches.occurrences_of("quiet") {
         0 => level,
         1 => Level::Warning,
         2 => Level::Error,
-        3 | _ => Level::Critical,
+        _ => Level::Critical,
     };
 
     let mut logs: Logs = Default::default();
